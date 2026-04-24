@@ -1,58 +1,36 @@
 :root {
   --dm-main-font-family: "Source Sans Pro", sans-serif;
-  --dm-main-bg-color: #262020;
-  --dm-main-fg-color: #BF360C;
-  --dm-grey-bg-color: #BF360C;
-  --dm-grey-fg-color: #c0ca08;
-  --dm-red-bg-color: #cc1717;
-  --dm-link-color: #d47a0c;
+  --dm-main-bg-color: #ffffff;
+  --dm-main-fg-color: #0f0f0f;
+  --dm-grey-bg-color: #d1d1d1;
+  --dm-grey-fg-color: #606060;
+  --dm-red-bg-color: #ff0000;
+  --dm-link-color: #065fd4;
 }
 
 a {
   color: var(--dm-link-color);
 }
 
-/*
- * Generic utilities
- */
- .grey-text {
-  color: var(--dm-grey-fg-color);
-}
-.white-text {
-  color: var(--dm-main-fg-color);
-}
+.grey-text { color: var(--dm-grey-fg-color); }
+.white-text { color: var(--dm-main-fg-color); }
+
 .dmHeader {
   font-size: 15px;
   font-weight: bold;
   text-align: left;
-  margin-bottom: 3px;
-  color: rgb(241, 241, 241);
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #0f0f0f;
 }
-#DanMuPopupBody .u-mZ {
-  margin: 0 !important;
-  position: relative;
-}
-
-#DanMuPopupBody .hidden, #DanMuPopupBody .dmhidden {
-  display: none !important;
-}
-
-/*
- * Main containers
- */
- #DanMuPopupHTML {
-  color-scheme: dark;
-  max-height: 600px;
-  overflow-y: auto;
-}
-
 
 #DanMuPopup {
   position: relative;
-  text-align: center;
+  text-align: left;
   margin: 0;
   width: 100%;
-  max-width: 100%; /* NOTE: Ensures content doesn't exceed restricted popup widths in Firefox */
+  max-width: 100%;
   height: 600px;
   max-height: 100%;
   overflow-y: auto;
@@ -61,222 +39,42 @@ a {
   font-family: var(--dm-main-font-family);
   background-color: var(--dm-main-bg-color);
   color: var(--dm-main-fg-color);
-  color-scheme: dark;
+  color-scheme: light;
+
+  /* 【核心修改】：在这里定义展开时的边框和阴影 */
+  border: 1.5px solid #b0b0b0 !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+  box-sizing: border-box; /* 防止边框撑开导致滚动条错位 */
 }
 
-#DanMuPopup a,
-#DanMuPopup button {
-  cursor: pointer;
-}
-
-
-
-.dmCloseButton:hover {
-  opacity: 1;
-}
-
-/*
- * Header logo
- */
- .dmPopupLogo {
-  position: relative;
-  top: 10px;
-  font-weight: bold;
-  user-select: none;
-}
-.dmPopupLogo img {
-  margin: 2px;
-}
-
-  /*
- * Header name
- */
- .DanMuPopupName {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  user-select: none;
-  padding: 10px 0px 0px;
-  font-size: 40px;
-}
-
-/* Style the search box inside the navigation bar */
-.topsearch{
-  width: 95%;
-  margin-left: 8px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-  /*
- * Submit box
- */
- #mainControls {
-  margin: 8px;
-  padding: 3px 3px;
-  text-align: left;
-  border-radius: 8px;
-  border: 2px solid var(--dm-grey-bg-color);
-}
-.sponsorStartHint {
-  display: block;
-  text-align: left;
-  padding-top: 3px;
-}
-
-  /*
- * Video info
- */
-.dmVideoItem {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 10px;
-  width: 100%;
-}
-
-.dmVideoThumbnail {
-  position: relative;
-  margin-right: 10px;
-}
-
-.dmVideoThumbnail img {
-  width: 95px; /* set image size */
-  height: auto; 
-  border-radius: 4px;
-  margin-left: 0;
-}
-
-.dmVideoDuration {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  padding: 2px 4px;
-  border-radius: 2px;
-  font-size: 0.75em; /* video duration size */
-}
-
-.dmVideoDetails {
-  flex-grow: 1;
-  overflow: hidden;
-}
-
-.dmVideoTitle {
-  font-size: 0.8em; /* Adjust the video title font size as needed */
-  margin: 0 0 2px 0;
-  width: 100%;
-
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2; /* Limit to two lines */
-  -webkit-box-orient: vertical;
-  text-overflow: ellipsis;
-  color: rgb(241, 241, 241);
-}
-
-
-.dmVideoAuthor {
-  font-size: 0.65em; 
-  color: #fff;
-  margin: 0 0 5px 0;
-
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dmVideoViews {
-  font-size: 0.6em; 
-  color: #fff;
-  margin: 0;
-}
-
-.dmVideoLink {
-  text-decoration: none; /* delete under line */
-  color: inherit; 
-}
-
-.dmVideoLink:hover .dmVideoDetails {
-  text-decoration: underline; 
-}
-
-.Unfoundtext{
-  color: #fff;
-}
-
-  /*
- * Video small popup
- */
- .modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 500;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  position: relative;
-  background-color: #262020;
-  padding: 3vh;
-  
-  border-radius: 5px;
-  width: 32vh;
-  border: 0.5vh solid #BF360C; 
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8); /* add shadow */
-}
-.popuptitle {
-  font-size: 2vh; /* Adjust the video title font size as needed */
-  margin: 0 0 2px 0;
-  width: 100%;
-  color: #fff;
-  position: relative;
-  bottom: 21px;
-
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 3; /* Limit to two lines */
-  -webkit-box-orient: vertical;
-  text-overflow: ellipsis;
-}
-
-.popupThumbnail img{
-  width: 100%;
-  margin: auto;
-  margin-top: 3vh;
-  margin-bottom: 1vh;
-  height: auto; 
-  bottom: 21px;
-  border-radius: 4px;
-  border: 2px solid #BF360C; 
-  position: relative;
-}
-
-.popupbottom {
-  margin: 5px;
-}
-
-.hideDanmakus {
-  visibility: hidden;
-}
-
-.makeGray {
-  filter: grayscale(100%);
-}
-
-.danmu-panel {  
-  bottom: 90%;   
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-
-
+/* 剩下的布局保持不变 */
+#DanMuPopupBody .u-mZ { margin: 0 !important; position: relative; }
+#DanMuPopupBody .hidden, #DanMuPopupBody .dmhidden { display: none !important; }
+#DanMuPopupHTML { color-scheme: light; max-height: 600px; overflow-y: auto; }
+#DanMuPopup a, #DanMuPopup button { cursor: pointer; }
+.dmCloseButton:hover { opacity: 1; }
+.dmPopupLogo { position: relative; top: 10px; text-align: center; font-weight: bold; user-select: none; }
+.dmPopupLogo img { margin: 2px; }
+.DanMuPopupName { display: flex; align-items: center; justify-content: center; font-weight: bold; user-select: none; padding: 10px 0px 0px; font-size: 40px; }
+.topsearch{ width: 95%; margin-left: 8px; margin-top: 10px; margin-bottom: 10px; }
+#mainControls { margin: 8px; padding: 8px; text-align: left; border-radius: 8px; border: 1px solid #e0e0e0; background-color: #fafafa; }
+.sponsorStartHint { display: block; text-align: left; padding-top: 3px; }
+.dmVideoItem { display: flex; align-items: flex-start; margin-bottom: 10px; width: 100%; text-align: left; }
+.dmVideoThumbnail { position: relative; margin-right: 10px; flex-shrink: 0; }
+.dmVideoThumbnail img { width: 95px; height: auto; border-radius: 4px; margin-left: 0; }
+.dmVideoDuration { position: absolute; bottom: 5px; right: 5px; background-color: rgba(0, 0, 0, 0.7); color: #fff; padding: 2px 4px; border-radius: 2px; font-size: 0.75em; }
+.dmVideoDetails { flex-grow: 1; overflow: hidden; text-align: left; }
+.dmVideoTitle { font-size: 0.85em; margin: 0 0 2px 0; width: 100%; line-height: 1.3; display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: ellipsis; color: #0f0f0f; }
+.dmVideoAuthor { font-size: 0.7em; color: #606060; margin: 0 0 3px 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dmVideoViews { font-size: 0.65em; color: #606060; margin: 0; }
+.dmVideoLink { text-decoration: none; color: inherit; }
+.dmVideoLink:hover .dmVideoTitle { color: #065fd4; }
+.Unfoundtext{ color: #606060; text-align: left; padding: 5px; }
+.modal-backdrop { position: fixed; top: 0; left: 0; z-index: 500; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.3); display: flex; justify-content: center; align-items: center; }
+.modal-content { position: relative; background-color: #ffffff; padding: 20px; border-radius: 8px; width: 300px; border: 1px solid #ccc; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+.popuptitle { font-size: 14px; margin: 0 0 10px 0; width: 100%; color: #0f0f0f; text-align: left; display: -webkit-box; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; text-overflow: ellipsis; }
+.popupThumbnail img{ width: 100%; height: auto; border-radius: 6px; border: 1px solid #eee; margin-bottom: 10px; }
+.popupbottom { margin: 5px; text-align: center; }
+.hideDanmakus { visibility: hidden; }
+.makeGray { filter: grayscale(100%); }
+.danmu-panel { bottom: 90%; left: 50%; transform: translateX(-50%); }

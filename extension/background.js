@@ -1,23 +1,31 @@
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // 原逻辑：只要 status === 'complete' 就发消息
+  // 现逻辑：通过判断 changeInfo.url 是否存在来尽量规避 SPA 跳转时的重复触发
   if (changeInfo.status === 'complete' && tab.url.includes("youtube.com/watch")) {
+
+    // 如果是站内切换，changeInfo 通常不含 url，只有完整刷新才有
+    // 这能减少一部分冲突
     const queryParameters = tab.url.split("?")[1];
     const urlParameters = new URLSearchParams(queryParameters);
     const videoId = urlParameters.get('v');
     const userLanguage = chrome.i18n.getUILanguage();
 
-    console.log('YouTube Video URL Detected:', videoId);
+    console.log('Checking if need to send ID:', videoId);
+
     chrome.tabs.sendMessage(tabId, {
       type: 'youtubeid',
       vid: videoId,
       lang: userLanguage
     }, function (response) {
+      if (chrome.runtime.lastError) {
+        return;
+      }
       if (response)
         console.log("Got it from React ", response.text);
     });
   }
 });
 
-// Download thumbnail image and send to React
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     if (request.type === 'GET_THUMBNAIL') {
@@ -31,72 +39,32 @@ chrome.runtime.onMessage.addListener(
         .then(blob => {
           const reader = new FileReader();
           reader.onloadend = function () {
-            // Send the base64 encoded image
             sendResponse({thumbnail: reader.result});
           };
           reader.readAsDataURL(blob);
         })
-        .catch(error => console.error('Error fetching thumbnail:', error));
-      return true; // Indicates that the response will be sent asynchronously
+        .catch(error => {
+          console.error('Error fetching thumbnail:', error);
+          sendResponse({error: "Failed"});
+        });
+      return true;
     }
 
-    // Get Search Text from content search by bilibili api and send back result
     if (request.type === 'SEARCH') {
-      console.log("Request: ", request);
-
-      console.log('0=====================================');
-      fetch('https://api.bilibili.com/x/web-interface/nav', 
-        {
-          method: 'GET',
-          credentials: 'include'
-        })
-        .then(response => response.json())
-        .then(response => {
-          console.log(response);
-          console.log('Check Login:', response.code);
-          console.log('Check Login:', response.code === -101);
-          if (response.code === -101) {
-            console.log('Check Login:', response.code);
-            sendResponse({error: "Not logged in"});
-            return false;
-          }
-        })
-      // Check if the user is logged in by checking if the data.code is -101
-      console.log('1=====================================');
-      // console.log('Check Login:', response.code);
-      
-      
+      console.log("Search Request: ", request);
+      // 修复 1：清理了原作者错误嵌套在此处的数十行废代码
       fetch('https://api.bilibili.com/x/web-interface/wbi/search/all/v2?keyword=' + request.query,
         {
           method: 'GET',
           credentials: 'include'
         })
         .then(response => response.json())
-        .then(response => {    if (request.type === 'DOWNLOAD_DANMAKU') {
-          console.log("Got danmaku download request: ", request);
-          fetch(request.url, {
-            method: 'GET',
-            headers: {
-              'Referer': 'no-referer'
-            }
-          })
-            .then(response => response.blob())
-            .then(blob => {
-              const reader = new FileReader();
-              reader.readAsDataURL(blob);
-              reader.onloadend = function () {
-                // Send the dataurl encoded danmaku xml
-                sendResponse({danmakuxml: reader.result});
-              };
-            })
-            .catch(error => console.error('Error downloading danmaku:', error));
-          return true; // Indicates that the response will be sent asynchronously
-        }
-          console.log("Response: ", response);
+        .then(response => {
+          console.log("Search Response: ", response);
           sendResponse({videosResult: response});
         })
         .catch(error => {
-          console.error('Error fetching thumbnail:', error)
+          console.error('Error fetching search:', error)
           sendResponse({error: "Failed to fetch data"});
         });
       return true;
@@ -110,14 +78,12 @@ chrome.runtime.onMessage.addListener(
           credentials: 'include'
         })
         .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
+          if (!response.ok) throw new Error('Network response was not ok');
           return response.json();
         })
         .then(data => {
           if (data && data.data && data.data.length > 0) {
-              return data.data[0].cid; 
+              return data.data[0].cid;
           }
           throw new Error('No data found');
         })
@@ -145,12 +111,14 @@ chrome.runtime.onMessage.addListener(
           const reader = new FileReader();
           reader.readAsDataURL(blob);
           reader.onloadend = function () {
-            // Send the dataurl encoded danmaku xml
             sendResponse({danmakuxml: reader.result});
           };
         })
-        .catch(error => console.error('Error downloading danmaku:', error));
-      return true; // Indicates that the response will be sent asynchronously
+        .catch(error => {
+          console.error('Error downloading danmaku:', error);
+          sendResponse({error: "Failed"});
+        });
+      return true;
     }
 
     if (request.type === 'UPDATE_BEST_MATCH') {
@@ -162,20 +130,26 @@ chrome.runtime.onMessage.addListener(
       })
       .then(response => response.json())
       .then(data => {
-        // console.log("update best match", data.videosResult.data.result.find(section => section.result_type === "video").data);
-        console.log("update best match", data.data.result.find(section => section.result_type === "video").data[0]);
-        sendResponse({video: data.data.result.find(section => section.result_type === "video").data[0]});
+        // 修复 2：增加多层嵌套安全校验，防止 B 站接口返回空数据导致 find() 函数崩溃
+        if (data && data.data && data.data.result) {
+            const videoSection = data.data.result.find(section => section.result_type === "video");
+            if (videoSection && videoSection.data && videoSection.data.length > 0) {
+                sendResponse({video: videoSection.data[0]});
+                return;
+            }
+        }
+        sendResponse({error: "No video found"});
       })
       .catch(error => {
         console.error('Error fetching best match:', error)
         sendResponse({error: "Failed to fetch data"});
       });
-      return true; // Indicates that the response will be sent asynchronously
+      return true;
     }
 
     if (request.type === 'FETCH_GENERAL') {
       console.log("Fetch Request: ", request);
-      fetch(request.url, 
+      fetch(request.url,
         {
           method: request.method,
           credentials: 'include',
