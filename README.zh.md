@@ -17,17 +17,15 @@
 
 ##### 如何使用
 
-1. 在浏览器扩展商店中添加 Danmaku Kakashi 
+1、下载并解压Danmaku.Kakashi.v1.0.4 .zip 。
 
-2. 在 [youtube.com](https://www.youtube.com/) 打开任意视频 
+2、打开 chrome://extensions/，开启 “开发者模式”。
 
-3. 在 Danmaku Kakashi 面板中选择或搜索视频 
+3、点击左上角的 “加载未打包的扩展程序”。
 
-4. 点击"载入弹幕"按钮 
+4、选择解压后的文件夹即可。
 
-5. 开看！
-
-6. (可选) [登录](https://www.dm-kks.com/leaderboard) 或 [注册](https://www.dm-kks.com/leaderboard) Danmaku Kakashi 账号开始获得贡献点数!
+解压后的文件夹不可删除，否则插件会失效！
 
 
 ##### 使用的技术
