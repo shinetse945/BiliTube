@@ -6,6 +6,8 @@
 
 <h1 align="center">Danmaku Kakashi</h1>
 
+### 因原项目不再更新，本项目为个人维护后发布，在原项目最新版本v1.0.3后升级
+
 ### 在 YouTube™上享受弹幕
 
 ##### 功能
@@ -28,13 +30,6 @@
 
 6. (可选) [登录](https://www.dm-kks.com/leaderboard) 或 [注册](https://www.dm-kks.com/leaderboard) Danmaku Kakashi 账号开始获得贡献点数!
 
-##### 即将推出的功能
-
-- 在任意 YouTube 视频上添加你自己的弹幕 
-
-- 弹幕显示设置（大小，速度，屏蔽词...） 
-
-- 用户贡献排行榜 
 
 ##### 使用的技术
 
@@ -52,7 +47,7 @@
 
 [<img src="https://raw.githubusercontent.com/Danmaku-Kakashi/Danmaku-Kakashi-Ext/main/danmaku-kakashi/public/videoCover_zh.png" alt="播放演示" width="512" style="zoom: 50%;" />](https://www.youtube.com/watch?v=U25MSKsE_pQ)
 
-##### 作者
+##### 原项目作者
 
 **Erlan (Leon) Liang**: [GitHub](https://github.com/ErlanLiang) | [LinkedIn](https://www.linkedin.com/in/leon-erlanliang/)
 
