@@ -1,4 +1,3 @@
-[English](README.md) | 简体中文
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/Danmaku-Kakashi/Danmaku-Kakashi-Ext/Add-basic-user-functionality/extension/icons/logoicon-cropped.png" alt="" width="128">
@@ -6,7 +5,7 @@
 
 <h1 align="center">Danmaku Kakashi</h1>
 
-### 因原项目不再更新，本项目为个人维护后发布，在原项目最新版本v1.0.3后升级
+### 因原项目不再更新，本项目为个人维护后在原项目最新版本v1.0.3后升级的版本
 
 ### 在 YouTube™上享受弹幕
 
