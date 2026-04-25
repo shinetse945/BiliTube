@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useRef} from 'react'
 import { useTranslation } from 'react-i18next';
 import { useAccessToken } from './AccessTokenContext';
 import './content/App.css';
@@ -10,7 +10,6 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CustomizedInputBase from './content/searchBar.js';
 import Modal from './content/Modal.js';
 import VideoBox from './content/VideoBox.js';
-// import UserInfo from './content/UserInfo.js'; // 已移除 UserInfo 引用
 import appendDanmakuControl from './content/DanmakuPanel.js';
 
 const lightTheme = createTheme({
@@ -45,7 +44,6 @@ function App() {
   const [lang, setLang] = React.useState(i18n.language);
   const { accessToken, setAccessToken } = useAccessToken();
 
-  // const Logo = chrome.runtime.getURL("icons/logo.png"); // Logo 变量已不再需要
   const LogoIcon = chrome.runtime.getURL("icons/logoicon.png");
 
   const [searchMatchVideos, setSearchMatchVideos] = useState([]);
@@ -57,6 +55,9 @@ function App() {
   const [bestMatchVideos, setBestMatchVideos] = useState([]);
   const [possibleMatchVideos, setPossibleMatchVideos] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(true);
+
+  // 引用标记，防止在同一个 URL 下重复自动加载
+  const hasAutoLoaded = useRef(false);
 
   const [youtubeUrl, setYoutubeUrl] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -85,15 +86,29 @@ function App() {
 
   const showVideoBox = () => setShowMainControls(true);
 
+  // 封装通用的弹幕加载逻辑，供手动和自动调用
+  const loadDanmakuByVideo = (video) => {
+    if (!video) return;
+    uploadVideo(video);
+    chrome.runtime.sendMessage({ type: 'GET_VIDEO_DANMAKU', bvid: video.bvid }, (response) => {
+      if (response.error) return;
+      const cid = response.videocid;
+      const danmakuUrl = `https://comment.bilibili.com/${cid}.xml`;
+      
+      // 检查全局函数是否存在（由于 index.js 的注入可能存在微小延迟）
+      if (typeof window.addDanmakuSource === 'function') {
+        window.addDanmakuSource(danmakuUrl);
+        console.log("[Danmaku-Kakashi] 弹幕加载指令已发出:", video.title);
+      } else {
+        console.warn("[Danmaku-Kakashi] 尚未检测到弹幕引擎，尝试延迟加载...");
+        setTimeout(() => window.addDanmakuSource?.(danmakuUrl), 1000);
+      }
+    });
+  };
+
   const handleLoadDanmakusClick = () => {
     if (selectedVideo) {
-      uploadVideo(selectedVideo);
-      chrome.runtime.sendMessage({ type: 'GET_VIDEO_DANMAKU', bvid: selectedVideo.bvid }, (response) => {
-        if (response.error) return;
-        const cid = response.videocid;
-        const danmakuUrl = `https://comment.bilibili.com/${cid}.xml`;
-        window.addDanmakuSource(danmakuUrl);
-      });
+      loadDanmakuByVideo(selectedVideo);
       setIsModalOpen(false);
     }
   };
@@ -135,16 +150,31 @@ function App() {
     setIsModalOpen(true);
   };
 
+  // ---------------------------------------------------------
+  // 逻辑块 A：获取视频数据 & 自动加载逻辑
+  // ---------------------------------------------------------
   useEffect(() => {
     let intervalId = null;
+    
+    // 每当 URL 改变，重置自动加载标记
+    hasAutoLoaded.current = false;
+
     if (youtubeUrl){
       const url = process.env.REACT_APP_API_BASE_URL + `/api/videos/?youtubeid=${youtubeUrl}`;
       newVideo();
+      
       fetch(url)
         .then(response => response.json())
         .then(data => {
           data.sort((a, b) => b.numused - a.numused);
           setBestMatchVideos(data);
+          
+          // 【核心改动】：如果存在最佳匹配，执行自动加载
+          if (data && data.length > 0 && !hasAutoLoaded.current) {
+            console.log("[Danmaku-Kakashi] 匹配到最佳视频，执行自动加载...");
+            loadDanmakuByVideo(data[0]);
+            hasAutoLoaded.current = true;
+          }
         })
         .catch(error => console.error('Error fetching best match:', error));
 
@@ -172,6 +202,8 @@ function App() {
 
     const handleNewUrl = (message, sender, sendResponse) => {
       if (message.type === 'youtubeid') {
+          // 当视频跳转时更新 youtubeUrl
+          setYoutubeUrl(message.youtubeId); 
           let lang = message.lang.startsWith('zh') ? 'zh' : 'en';
           if (i18n.language !== lang) {
             i18n.changeLanguage(lang);
@@ -260,14 +292,11 @@ function App() {
       <div id="DanMuPopup" className="DanMuPageBody"
         style={{ display: isPopupOpen ? 'block' : 'none', backgroundColor: '#ffffff' }}>
 
-          {/* UserInfo 和 Header 已从此处移除 */}
-
           <IconButton color="inherit" onClick={handleCloseIconClick}
             style={{position: 'absolute', top: 5, right: 5, zIndex: 1, color: '#606060'}}>
             <CloseRoundedIcon style={{fontSize: 24}}/>
           </IconButton>
 
-            {/* 调整了搜索框容器的顶部边距，填补 Logo 消失后的空位 */}
             <div style={{ paddingTop: '40px' }}>
                 <CustomizedInputBase onSearchTrigger={handleSearchTrigger}/>
             </div>
