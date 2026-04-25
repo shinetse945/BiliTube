@@ -18,7 +18,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: "en", // default language
+    lng: navigator.language.startsWith('zh') ? 'zh' : 'en', // auto-detect language
     keySeparator: false,
     interpolation: {
       escapeValue: false

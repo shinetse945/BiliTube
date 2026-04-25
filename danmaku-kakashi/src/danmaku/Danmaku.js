@@ -8,10 +8,9 @@ class Danmaku extends React.Component {
     offset = 0;
 
     resetDanmakus = () => {
-        this.commentManager.clear();
-        this.commentProvider.destroy();
+        if (this.commentManager) this.commentManager.clear();
+        if (this.commentProvider) this.commentProvider.destroy();
         this.initCCL();
-        console.log("Danmakus reset");
     }
 
     getSetting(key) {
@@ -23,22 +22,14 @@ class Danmaku extends React.Component {
     }
 
     initCCL = () => {
-        console.log("Initializing CCL");
-
-        console.log("Settings: ", this.settings);
-
         // Set up comment manager
         const danmakuCanvas = document.getElementById("danmaku-canvas");
-        console.log("Creating comment manager, canvas:", danmakuCanvas);
+        if (!danmakuCanvas) return;
+        
         this.commentManager = new CommentManager(danmakuCanvas);
         this.commentManager.init();
         this.setCCLSettings();
-        console.log("Comment manager options", this.commentManager.options);
-
         this.commentManager.start();
-
-        console.log("Comment manager initialized");
-
         this.initCommentProvider();
     }
 
@@ -57,107 +48,112 @@ class Danmaku extends React.Component {
         this.commentProvider = new CommentProvider();
         this.commentProvider.addParser(new BilibiliFormat.XMLParser(), CommentProvider.SOURCE_XML);
         this.commentProvider.addTarget(this.commentManager);
-        this.commentProvider.load().then(() => {
-            console.log("Comment provider loaded");
-        }).catch((err) => {
-            console.error(err);
-            console.log("Comment provider failed to load");
+        this.commentProvider.load().catch((err) => {
+            console.error("Failed to load comments:", err);
         });
     }
 
     registerSettingsListener = () => {
-        chrome.storage.onChanged.addListener((changes, namespace) => {
+        this.storageListener = (changes, namespace) => {
             for (let key in changes) {
                 if (key === "danmakuSettings") {
-                    console.log("Danmaku settings changed: ", changes[key].newValue);
                     this.settings[key] = changes[key].newValue;
                     this.setCCLSettings();
                 }
             }
-        });
+        };
+        chrome.storage.onChanged.addListener(this.storageListener);
+    }
+
+    unregisterSettingsListener = () => {
+        if (this.storageListener) {
+            chrome.storage.onChanged.removeListener(this.storageListener);
+            this.storageListener = null;
+        }
     }
 
     createVideoListeners = () => {
-        const videoPlayer = document.getElementsByTagName("video")[0];
-        videoPlayer.addEventListener("play", () => {
-            // console.log("Video play");
-            this.commentManager.start();
-        });
-        videoPlayer.addEventListener("pause", () => {
-            // console.log("Video pause");
-            this.commentManager.stop();
-        });
-        videoPlayer.addEventListener("seeking", () => {
-            // console.log("Video seeking");
-            this.commentManager.clear();
-            this.commentManager.time(videoPlayer.currentTime * 1000 + this.offset * 1000);
-        });
-        videoPlayer.addEventListener("timeupdate", () => {
-            // console.log("Video timeupdate");
+        this.videoPlayer = document.getElementsByTagName("video")[0];
+        if (!this.videoPlayer) return;
+
+        this.videoPlayHandler = () => this.commentManager?.start();
+        this.videoPauseHandler = () => this.commentManager?.stop();
+        this.videoSeekingHandler = () => {
+            this.commentManager?.clear();
+            this.commentManager?.time(this.videoPlayer.currentTime * 1000 + this.offset * 1000);
+        };
+        this.videoTimeupdateHandler = () => {
             let movie_player = document.getElementById('movie_player');
-            if (movie_player) {
-                // Ignore timeupdate events when ads are playing
-                if (movie_player.classList.contains("ad-interrupting")) {
-                    return;
-                }
+            if (movie_player && movie_player.classList.contains("ad-interrupting")) {
+                return;
             }
-            this.commentManager.time(videoPlayer.currentTime * 1000 + this.offset * 1000);
-        });
+            this.commentManager?.time(this.videoPlayer.currentTime * 1000 + this.offset * 1000);
+        };
+
+        this.videoPlayer.addEventListener("play", this.videoPlayHandler);
+        this.videoPlayer.addEventListener("pause", this.videoPauseHandler);
+        this.videoPlayer.addEventListener("seeking", this.videoSeekingHandler);
+        this.videoPlayer.addEventListener("timeupdate", this.videoTimeupdateHandler);
+
         if (!this.mutationObserver) {
-            // console.log("Creating mutation observer");
-            this.mutationObserver = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    this.resizeDanmakuCanvas();
-                });
-            });
-            this.mutationObserver.observe(videoPlayer, {attributes: true, attributeFilter: ["style"]});
+            this.mutationObserver = new MutationObserver(() => this.resizeDanmakuCanvas());
+            this.mutationObserver.observe(this.videoPlayer, {attributes: true, attributeFilter: ["style"]});
+        }
+    }
+
+    removeVideoListeners = () => {
+        if (this.videoPlayer) {
+            this.videoPlayer.removeEventListener("play", this.videoPlayHandler);
+            this.videoPlayer.removeEventListener("pause", this.videoPauseHandler);
+            this.videoPlayer.removeEventListener("seeking", this.videoSeekingHandler);
+            this.videoPlayer.removeEventListener("timeupdate", this.videoTimeupdateHandler);
+        }
+        if (this.mutationObserver) {
+            this.mutationObserver.disconnect();
+            this.mutationObserver = null;
         }
     }
 
     resizeDanmakuCanvas = () => {
-        var danmakuCanvas = document.getElementById("danmaku-canvas");
-        var danmakuContainer = document.getElementById("danmaku-container");
-        var videoContainer = document.getElementById("movie_player");
-        if (!danmakuCanvas || !videoContainer) {
-            console.log("Danmaku canvas or video container not found");
+        const danmakuCanvas = document.getElementById("danmaku-canvas");
+        const danmakuContainer = document.getElementById("danmaku-container");
+        const videoContainer = document.getElementById("movie_player");
+        if (!danmakuCanvas || !videoContainer || !this.commentManager) {
             return;
         }
 
-        var defWidth = 1280;
-        var defHeight = 720;
-        var width = parseInt(videoContainer.offsetWidth, 10);
-        var height = parseInt(videoContainer.offsetHeight, 10);
+        const defWidth = 1280;
+        const defHeight = 720;
+        const width = parseInt(videoContainer.offsetWidth, 10);
+        const height = parseInt(videoContainer.offsetHeight, 10);
 
-        var scale = Math.sqrt(Math.min(width / defWidth, height / defHeight));
-        var relWidth = Math.floor(width / scale);
-        var relHeight = Math.floor(height / scale);
+        const scale = Math.sqrt(Math.min(width / defWidth, height / defHeight));
+        const relWidth = Math.floor(width / scale);
+        const relHeight = Math.floor(height / scale);
 
-        console.log("New dimensions: " + width + "x" + height);
-
-        danmakuContainer.style.width = width + "px";
-        danmakuContainer.style.height = height + "px";
+        if (danmakuContainer) {
+            danmakuContainer.style.width = width + "px";
+            danmakuContainer.style.height = height + "px";
+        }
 
         this.commentManager.stage.style.width = relWidth + "px";
         this.commentManager.stage.style.height = relHeight + "px";
         this.commentManager.stage.style.transform = "scale(" + scale + ")";
-        this.commentManager.stage.style.webkitFontSmoothing = "subpixel-antialiased";   // Set webkit font smoothing for better text rendering
-
+        this.commentManager.stage.style.webkitFontSmoothing = "subpixel-antialiased";
         this.commentManager.setBounds(relWidth, relHeight);
     }
 
     addDanmakuSource = (source) => {
-        console.log("Adding danmaku source", source);
         chrome.runtime.sendMessage({type: "DOWNLOAD_DANMAKU", url: source}, (response) => {
-            console.log("Response: ", response);
+            if (!this.commentManager || !this.commentProvider) return;
             this.commentManager.stop();
             this.commentManager.time(0);
             this.commentProvider.addStaticSource(CommentProvider.XMLProvider('GET', response.danmakuxml), CommentProvider.SOURCE_XML);
 
             this.commentProvider.load().then(() => {
-                console.log("Comment provider loaded");
-                this.commentManager.start();
+                if (this.commentManager) this.commentManager.start();
             }).catch((err) => {
-                console.error("Comment provider failed to load", err);
+                console.error("Failed to load comments:", err);
             });
         });
     }
@@ -194,6 +190,13 @@ class Danmaku extends React.Component {
         this.commentManager = null;
         this.commentProvider = null;
         this.mutationObserver = null;
+        this.offsetObserver = null;
+        this.storageListener = null;
+        this.videoPlayer = null;
+        this.videoPlayHandler = null;
+        this.videoPauseHandler = null;
+        this.videoSeekingHandler = null;
+        this.videoTimeupdateHandler = null;
     }
 
     async componentDidMount() {
@@ -208,30 +211,43 @@ class Danmaku extends React.Component {
         window.resetDanmakus = this.resetDanmakus;
         window.addDanmakuSource = this.addDanmakuSource;
         window.toggleDanmakuVisibility = this.toggleDanmakuVisibility;
-        console.log("Danmaku component mounted");
 
         // Add listener for offset changes
         const offsetElement = document.getElementById("danmaku-offset");
-        const offsetObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
+        if (offsetElement) {
+            this.offsetObserver = new MutationObserver(() => {
                 this.offset = parseInt(offsetElement.textContent, 10);
-                console.log("Offset changed: ", this.offset);
             });
-        });
-        offsetObserver.observe(offsetElement, {childList: true});
-    }
-
-    componentDidUpdate() {
-        console.log("Danmaku component updated");
+            this.offsetObserver.observe(offsetElement, {childList: true});
+        }
     }
 
     componentWillUnmount() {
-        this.commentManager.stop();
+        // Clean up comment manager
+        if (this.commentManager) {
+            this.commentManager.stop();
+        }
+        if (this.commentProvider) {
+            this.commentProvider.destroy();
+        }
+
+        // Clean up event listeners
+        this.removeVideoListeners();
+        this.unregisterSettingsListener();
+
+        // Clean up observers
+        if (this.offsetObserver) {
+            this.offsetObserver.disconnect();
+            this.offsetObserver = null;
+        }
+
+        // Clean up window methods
+        delete window.resetDanmakus;
+        delete window.addDanmakuSource;
+        delete window.toggleDanmakuVisibility;
     }
 
     render() {
-        console.log("Danmaku render");
-
         return (
             <>
                 <div id="danmaku-canvas" className={`container`} />

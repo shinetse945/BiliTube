@@ -20,8 +20,8 @@
     "Bilibili Not Login": "Due to API restrictions, please login on Bilibili to search for videos ",
     "Danmaku Settings": "Danmaku Settings",
     "Max Danmaku Count": "Display",
-    "Unimited": "Unlimited",
-    "opacity": "Opacity",
+    "Unlimited": "Unlimited",
+    "Opacity": "Opacity",
     "Font Size": "Font Size",
     "Speed": "Speed",
     "Danmaku time offset": "Time Adjustment",
@@ -29,6 +29,7 @@
     "Offset placeholder": "i.e. \"-1\" -> 1 second earlier",
     "Apply": "Apply",
     "Clear": "Clear",
-    "Invalid Input": "**Invalid Input**"
+    "Invalid Input": "**Invalid Input**",
+    "Refresh": "Refresh"
 
 }

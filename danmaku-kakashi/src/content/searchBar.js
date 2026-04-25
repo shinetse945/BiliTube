@@ -53,7 +53,7 @@ const CustomizedInputBase = ({onSearchTrigger}) => {
               fontSize: '13px',
             },
           }}
-          placeholder={t("Search by keyword or BV number...")}
+          placeholder={t("输入关键词或 BV号...")}
           inputProps={{ 'aria-label': 'search...' }}
           value={searchTerm}
           onChange={handleSearchChange}
