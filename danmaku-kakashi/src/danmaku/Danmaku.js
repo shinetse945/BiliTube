@@ -200,7 +200,8 @@ class Danmaku extends React.Component {
     }
 
     async componentDidMount() {
-        this.settings = await chrome.storage.sync.get("danmakuSettings") || defaultSettings;
+        const data = await chrome.storage.sync.get("danmakuSettings");
+        this.settings = data?.danmakuSettings ? data : { danmakuSettings: defaultSettings };
         this.registerSettingsListener();
 
         this.initCCL();

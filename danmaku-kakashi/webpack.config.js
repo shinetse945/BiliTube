@@ -4,7 +4,6 @@ const Dotenv = require('dotenv-webpack');
 module.exports = {
     entry: './src/index.js',
     mode: 'production',
-    devtool: 'inline-source-map',
     module: {
         rules: [
             {
@@ -19,8 +18,8 @@ module.exports = {
                 use: ['style-loader', 'css-loader']
             },
             {
-                test: /\.(woff|woff2|eot|ttf|otf)$/,
-                use: ['file-loader']
+                test: /\.(png|jpg|jpeg|gif|webp|svg)$/i,
+                type: 'asset/resource'
             }
         ]
     },
@@ -29,9 +28,13 @@ module.exports = {
     },
     output: {
         filename: 'content.js',
-        path: path.resolve(__dirname, '..', 'extension')
+        path: path.resolve(__dirname, '..', 'extension'),
+        assetModuleFilename: '[name][hash:8][ext]'
     },
     plugins: [
         new Dotenv()
-    ]
+    ],
+    cache: {
+        type: 'filesystem'
+    }
 };

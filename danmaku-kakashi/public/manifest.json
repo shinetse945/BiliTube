@@ -1,25 +1,40 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
-  "icons": [
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+    "name": "Danmaku Kakashi",
+    "version": "1.1.0",
+    "permissions" :["tabs", "storage"],
+    "manifest_version": 3,
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqusevku+gfqajEc5BS6TF20aJ+6it96CFn9WC/JWwZY10k0ITbShghBcXXsvuE3xRdN7NyH9JSULi3oT07bs5dvUDrKKWTdsXxP9hCdKsimqZ5Hy/8mlkbG8/0xsQSrOCUbL2bFN8zCTPaA0EwmY+VWu8d7B0qzDqLXgzqO3OLXSbhPYLrUQ7tmbEToBJtdzSaXENhqdU8A2amcd7wmlKY/XClaJwT9F+kWUZysiW3ipewIjEt/Et5tbG5JHj8Z8LEcJ/9l8H7KQ/niNuAJVcl0vT0dzw6j6E0Nq6h0My/T2x9Io2tT+qP7IEvZxv3P3DmZ6aswznGk1G51a8x/kWQIDAQAB",
+    "host_permissions": [
+        "https://*.youtube.com/*",
+        "https://*.bilibili.com/*",
+        "https://*.dm-kks.com/*"
+    ],
+    "icons": {
+        "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
     },
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+    "content_scripts": [
+        {
+            "matches": [
+                "https://*.youtube.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["/icons/*"],
+            "matches": ["https://*.youtube.com/*"]
+        }
+    ],
+    "background": {
+        "service_worker": "background.js"
     },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+    "content_security_policy": {
+        "extension_pages": "default-src 'self'; connect-src https://* data: blob: filesystem:;"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
 }
