@@ -285,7 +285,7 @@ function App({ initOpen }) {
           ▼ 展开弹幕关联面板 ▼
         </Button>
 
-        {/* 词典编辑器 - 悬浮模式 (修复拖拽延迟 & 视觉隐藏把手) */}
+        {/* 词典编辑器 - 悬浮模式*/}
         {showDictSettings && (
           <Draggable 
             nodeRef={draggableNodeRef} 
