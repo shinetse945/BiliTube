@@ -135,4 +135,4 @@ dist
 # Built content
 extension/
 
-.idea/*
+.idea/
