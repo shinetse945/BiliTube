@@ -22,6 +22,35 @@ const parseDuration = (str) => {
   return parts.reduce((acc, part) => acc * 60 + part, 0);
 };
 
+// 计算字符串相似度 (Levenshtein距离算法)
+const getSimilarity = (s1, s2) => {
+  if (!s1 || !s2) return 0;
+  s1 = s1.toLowerCase();
+  s2 = s2.toLowerCase();
+  
+  const track = Array(s2.length + 1).fill(null).map(() => Array(s1.length + 1).fill(null));
+  for (let i = 0; i <= s1.length; i += 1) track[0][i] = i;
+  for (let j = 0; j <= s2.length; j += 1) track[j][0] = j;
+  for (let j = 1; j <= s2.length; j += 1) {
+    for (let i = 1; i <= s1.length; i += 1) {
+      const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      track[j][i] = Math.min(track[j][i - 1] + 1, track[j - 1][i] + 1, track[j - 1][i - 1] + indicator);
+    }
+  }
+  return 1 - (track[s2.length][s1.length] / Math.max(s1.length, s2.length));
+};
+
+// 综合排序评分计算: 标题相似度占40%，时长匹配占60%
+const getMatchScore = (video, ytLen, ytTitle) => {
+  const durationDiff = Math.abs(parseDuration(video.duration) - ytLen);
+  // 时长差异超过30秒权重大幅下降
+  const durationScore = Math.max(0, 1 - durationDiff / 180);
+  const titleScore = getSimilarity(video.title, ytTitle);
+  
+  // 综合评分: 时长权重更高
+  return (titleScore * 0.4) + (durationScore * 0.6);
+};
+
 const safeSendMessage = (params, callback) => {
   try {
     if (chrome?.runtime?.id) {
@@ -107,7 +136,7 @@ function App({ initOpen }) {
       const videoSection = response.videosResult.data.result.find(s => s.result_type === "video");
       if (videoSection) {
         const results = videoSection.data.sort((a, b) => {
-          return Math.abs(parseDuration(a.duration) - ytLen) - Math.abs(parseDuration(b.duration) - ytLen);
+          return getMatchScore(b, ytLen, searchInput) - getMatchScore(a, ytLen, searchInput);
         });
         results.forEach(v => {
           if (v.pic?.startsWith('//')) v.pic = v.pic.replace('//', 'https://');
@@ -125,15 +154,76 @@ function App({ initOpen }) {
     setBestMatchVideos([]);
     setPossibleMatchVideos([]);
     setShowMainControls(true);
+    hasAutoLoaded.current = false;
 
     fetch(process.env.REACT_APP_API_BASE_URL + `/api/videos/?youtubeid=${youtubeUrl}`)
       .then(res => res.json())
       .then(data => {
-        setBestMatchVideos(data.sort((a, b) => b.numused - a.numused));
+        const sorted = data.sort((a, b) => b.numused - a.numused);
+        setBestMatchVideos(sorted);
+        if (sorted.length > 0 && !hasAutoLoaded.current) {
+          loadDanmakuByVideo(sorted[0], false);
+          hasAutoLoaded.current = true;
+        }
       })
-      .catch(() => setIsNetworkError(true))
-      .finally(() => setIsRefreshing(false));
+      .catch(() => setIsNetworkError(true));
+
+    // 同时加载可能匹配视频
+    let checkTitle = setInterval(() => {
+      const titleEl = document.querySelector('yt-formatted-string.style-scope.ytd-watch-metadata');
+      if (titleEl) {
+        clearInterval(checkTitle);
+        const ytLen = getYTDuration();
+        const cleanTitle = titleEl.innerText.replace(/\[.*?\]|\(.*?\)/g, '').trim();
+        safeSendMessage({ type: 'SEARCH', query: cleanTitle }, (response) => {
+          if (response?.videosResult) {
+            const videoSection = response.videosResult.data.result.find(s => s.result_type === "video");
+            if (videoSection) {
+              const sorted = videoSection.data.filter(v => v.danmaku !== 0).sort((a, b) => {
+                return getMatchScore(b, ytLen, cleanTitle) - getMatchScore(a, ytLen, cleanTitle);
+              });
+              sorted.forEach(v => {
+                if (v.pic?.startsWith('//')) v.pic = v.pic.replace('//', 'https://');
+                v.title = v.title.replace(/<em class="keyword">([\s\S]*?)<\/em>/g, '$1');
+              });
+              setPossibleMatchVideos(sorted);
+            }
+          }
+        });
+      }
+    }, 1500);
+    
+    setTimeout(() => {
+      clearInterval(checkTitle);
+      setIsRefreshing(false);
+    }, 10000);
   };
+
+  // 监听YouTube SPA路由变化
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const currentVid = new URLSearchParams(window.location.search).get('v') || '';
+      if (currentVid !== youtubeUrl) {
+        setYoutubeUrl(currentVid);
+      }
+    };
+    
+    // 监听历史记录变化
+    let lastUrl = location.href; 
+    new MutationObserver(() => {
+      if (location.href !== lastUrl) {
+        lastUrl = location.href;
+        handleUrlChange();
+      }
+    }).observe(document, { subtree: true, childList: true });
+    
+    // 监听yt-page-data-updated事件
+    document.addEventListener('yt-page-data-updated', handleUrlChange);
+    
+    return () => {
+      document.removeEventListener('yt-page-data-updated', handleUrlChange);
+    };
+  }, [youtubeUrl]);
 
   useEffect(() => {
     if (youtubeUrl) {
@@ -166,7 +256,7 @@ function App({ initOpen }) {
               const videoSection = response.videosResult.data.result.find(s => s.result_type === "video");
               if (videoSection) {
                 const sorted = videoSection.data.filter(v => v.danmaku !== 0).sort((a, b) => {
-                  return Math.abs(parseDuration(a.duration) - ytLen) - Math.abs(parseDuration(b.duration) - ytLen);
+                  return getMatchScore(b, ytLen, cleanTitle) - getMatchScore(a, ytLen, cleanTitle);
                 });
                 sorted.forEach(v => {
                   if (v.pic?.startsWith('//')) v.pic = v.pic.replace('//', 'https://');
