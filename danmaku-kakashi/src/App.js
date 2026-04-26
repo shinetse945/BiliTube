@@ -11,6 +11,7 @@ import CustomizedInputBase from './content/searchBar.js';
 import Modal from './content/Modal.js';
 import VideoBox from './content/VideoBox.js';
 import appendDanmakuControl from './content/DanmakuPanel.js';
+import Draggable from 'react-draggable';
 
 const lightTheme = createTheme({
   palette: { mode: 'light', primary: { main: '#f03131' } },
@@ -22,33 +23,24 @@ const parseDuration = (str) => {
   return parts.reduce((acc, part) => acc * 60 + part, 0);
 };
 
-// 计算字符串相似度 (Levenshtein距离算法)
-const getSimilarity = (s1, s2) => {
-  if (!s1 || !s2) return 0;
-  s1 = s1.toLowerCase();
-  s2 = s2.toLowerCase();
-  
-  const track = Array(s2.length + 1).fill(null).map(() => Array(s1.length + 1).fill(null));
-  for (let i = 0; i <= s1.length; i += 1) track[0][i] = i;
-  for (let j = 0; j <= s2.length; j += 1) track[j][0] = j;
-  for (let j = 1; j <= s2.length; j += 1) {
-    for (let i = 1; i <= s1.length; i += 1) {
-      const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
-      track[j][i] = Math.min(track[j][i - 1] + 1, track[j - 1][i] + 1, track[j - 1][i - 1] + indicator);
-    }
-  }
-  return 1 - (track[s2.length][s1.length] / Math.max(s1.length, s2.length));
-};
+const INITIAL_DICT = [];
 
-// 综合排序评分计算: 标题相似度占40%，时长匹配占60%
-const getMatchScore = (video, ytLen, ytTitle) => {
-  const durationDiff = Math.abs(parseDuration(video.duration) - ytLen);
-  // 时长差异超过30秒权重大幅下降
-  const durationScore = Math.max(0, 1 - durationDiff / 180);
-  const titleScore = getSimilarity(video.title, ytTitle);
-  
-  // 综合评分: 时长权重更高
-  return (titleScore * 0.4) + (durationScore * 0.6);
+const extractFeatureString = (title, dictArray) => {
+  if (!title) return '';
+  let text = title;
+  if (dictArray && dictArray.length > 0) {
+    dictArray.forEach(({ kr, zh }) => {
+      if (kr && zh) text = text.split(kr).join(` ${zh} `);
+    });
+  }
+  text = text.replace(/\[.*?\]|\(.*?\)|\{.*?\}/g, (match) => {
+    if (/[\u4e00-\u9fa5a-zA-Z]/.test(match)) return match.replace(/[\[\]\(\)\{\}]/g, ' ');
+    return ' ';
+  });
+  text = text.replace(/[\u3130-\u318F\uAC00-\uD7AF\u3040-\u309F\u30A0-\u30FF]/g, ' ');
+  text = text.replace(/[|｜,，\-_\~～!！?？:：'”"‘♪\*\.˚&\+]/g, ' ');
+  text = text.replace(/\s+/g, ' ').trim();
+  return text.length > 1 ? text : title.replace(/\[.*?\]|\(.*?\)/g, '').trim();
 };
 
 const safeSendMessage = (params, callback) => {
@@ -63,7 +55,6 @@ const safeSendMessage = (params, callback) => {
 };
 
 function App({ initOpen }) {
-  const { t } = useTranslation();
   const { accessToken } = useAccessToken();
   const LogoIcon = chrome.runtime.getURL("icons/logoicon.png");
 
@@ -77,6 +68,12 @@ function App({ initOpen }) {
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // 词典编辑器状态
+  const [showDictSettings, setShowDictSettings] = useState(false);
+  const [dictList, setDictList] = useState(INITIAL_DICT);
+  const dictListRef = useRef(INITIAL_DICT);
+  const draggableNodeRef = useRef(null);
+
   const hasAutoLoaded = useRef(false);
   const [youtubeUrl, setYoutubeUrl] = useState(() => {
     return new URLSearchParams(window.location.search).get('v') || '';
@@ -87,34 +84,65 @@ function App({ initOpen }) {
     return durationEl ? parseDuration(durationEl.innerText) : 0;
   };
 
-  // --- 逻辑恢复 1：上传匹配记录到服务器 ---
+  const getYTTitle = () => {
+    const titleEl = document.querySelector('h1.ytd-watch-metadata yt-formatted-string') 
+                 || document.querySelector('#title h1 yt-formatted-string') 
+                 || document.querySelector('yt-formatted-string.style-scope.ytd-watch-metadata');
+    return titleEl ? titleEl.innerText : '';
+  };
+
+  useEffect(() => {
+    chrome.storage.sync.get(['customKpopDict'], (result) => {
+      if (result.customKpopDict && Array.isArray(result.customKpopDict)) {
+        setDictList(result.customKpopDict);
+        dictListRef.current = result.customKpopDict;
+      }
+    });
+  }, []);
+
+  const handleDictChange = (index, field, value) => {
+    const newList = [...dictList];
+    newList[index][field] = value;
+    setDictList(newList);
+  };
+
+  const addDictRow = () => setDictList([{ kr: '', zh: '' }, ...dictList]);
+  const removeDictRow = (index) => setDictList(dictList.filter((_, i) => i !== index));
+
+  const saveDict = () => {
+    const cleaned = dictList.filter(item => item.kr.trim() !== '' && item.zh.trim() !== '');
+    setDictList(cleaned);
+    dictListRef.current = cleaned;
+    chrome.storage.sync.set({ customKpopDict: cleaned }, () => setShowDictSettings(false));
+  };
+
+  const clearDict = () => {
+    if (window.confirm('确定要清空所有自定义替换词吗？')) {
+      setDictList(INITIAL_DICT);
+      dictListRef.current = INITIAL_DICT;
+      chrome.storage.sync.remove(['customKpopDict'], () => setShowDictSettings(false));
+    }
+  };
+
   const uploadVideo = (video) => {
-    safeSendMessage({ type: 'UPDATE_BEST_MATCH', bvid: video.bvid }, (response) => {
+    const targetBvid = video.bvid || video.id;
+    safeSendMessage({ type: 'UPDATE_BEST_MATCH', bvid: targetBvid }, (response) => {
       if (!response || response.error) return;
-      const videoData = {
-        ...response.video,
-        youtubeid: youtubeUrl,
-        access: accessToken 
-      };
-      if (videoData.pic?.startsWith('//')) videoData.pic = videoData.pic.replace('//', 'https://');
-      
+      const videoData = { ...response.video, youtubeid: youtubeUrl, access: accessToken };
+      if (videoData.pic?.startsWith('//')) videoData.pic = `https:${videoData.pic}`;
       fetch(process.env.REACT_APP_API_BASE_URL + '/create/video', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken && { 'Authorization': accessToken }),
-        },
+        headers: { 'Content-Type': 'application/json', ...(accessToken && { 'Authorization': accessToken }) },
         body: JSON.stringify(videoData),
       }).catch(() => {});
     });
   };
 
-  // --- 逻辑恢复 2：统一加载入口 ---
   const loadDanmakuByVideo = (video, shouldUpload = true) => {
     if (!video) return;
+    const targetBvid = video.bvid || video.id;
     if (shouldUpload) uploadVideo(video);
-
-    safeSendMessage({ type: 'GET_VIDEO_DANMAKU', bvid: video.bvid }, (response) => {
+    safeSendMessage({ type: 'GET_VIDEO_DANMAKU', bvid: targetBvid }, (response) => {
       if (response?.videocid) {
         const danmakuUrl = `https://comment.bilibili.com/${response.videocid}.xml`;
         window.addDanmakuSource?.(danmakuUrl);
@@ -122,26 +150,16 @@ function App({ initOpen }) {
     });
   };
 
-  // --- 逻辑恢复 3：搜索功能恢复 ---
   const handleSearchTrigger = (searchInput) => {
     setShowMainControls(false);
     setIsNetworkError(false);
-    const ytLen = getYTDuration();
-
-    safeSendMessage({ type: 'SEARCH', query: encodeURI(searchInput) }, (response) => {
-      if (!response?.videosResult) {
-        setSearchMatchVideos([]);
-        return;
-      }
+    const queryText = extractFeatureString(searchInput, dictListRef.current);
+    safeSendMessage({ type: 'SEARCH', query: queryText }, (response) => {
+      if (!response?.videosResult?.data?.result) { setSearchMatchVideos([]); return; }
       const videoSection = response.videosResult.data.result.find(s => s.result_type === "video");
       if (videoSection) {
-        const results = videoSection.data.sort((a, b) => {
-          return getMatchScore(b, ytLen, searchInput) - getMatchScore(a, ytLen, searchInput);
-        });
-        results.forEach(v => {
-          if (v.pic?.startsWith('//')) v.pic = v.pic.replace('//', 'https://');
-          v.title = v.title.replace(/<em class="keyword">([\s\S]*?)<\/em>/g, '$1');
-        });
+        const results = videoSection.data.sort((a, b) => Math.abs(parseDuration(a.duration) - getYTDuration()) - Math.abs(parseDuration(b.duration) - getYTDuration()));
+        results.forEach(v => { if (v.pic?.startsWith('//')) v.pic = `https:${v.pic}`; v.title = v.title.replace(/<em class="keyword">([\s\S]*?)<\/em>/g, '$1'); });
         setSearchMatchVideos(results);
       }
     });
@@ -150,118 +168,70 @@ function App({ initOpen }) {
   const refreshMatchedVideos = () => {
     if (!youtubeUrl || isRefreshing) return;
     setIsRefreshing(true);
-    setIsNetworkError(false);
-    setBestMatchVideos([]);
-    setPossibleMatchVideos([]);
+    setBestMatchVideos([]); setPossibleMatchVideos([]);
     setShowMainControls(true);
-    hasAutoLoaded.current = false;
-
     fetch(process.env.REACT_APP_API_BASE_URL + `/api/videos/?youtubeid=${youtubeUrl}`)
       .then(res => res.json())
       .then(data => {
         const sorted = data.sort((a, b) => b.numused - a.numused);
         setBestMatchVideos(sorted);
-        if (sorted.length > 0 && !hasAutoLoaded.current) {
-          loadDanmakuByVideo(sorted[0], false);
-          hasAutoLoaded.current = true;
-        }
-      })
-      .catch(() => setIsNetworkError(true));
+        if (sorted.length > 0 && !hasAutoLoaded.current) { loadDanmakuByVideo(sorted[0], false); hasAutoLoaded.current = true; }
+      }).catch(() => setIsNetworkError(true));
 
-    // 同时加载可能匹配视频
     let checkTitle = setInterval(() => {
-      const titleEl = document.querySelector('yt-formatted-string.style-scope.ytd-watch-metadata');
-      if (titleEl) {
+      const rawTitle = getYTTitle();
+      if (rawTitle) {
         clearInterval(checkTitle);
-        const ytLen = getYTDuration();
-        const cleanTitle = titleEl.innerText.replace(/\[.*?\]|\(.*?\)/g, '').trim();
-        safeSendMessage({ type: 'SEARCH', query: cleanTitle }, (response) => {
-          if (response?.videosResult) {
-            const videoSection = response.videosResult.data.result.find(s => s.result_type === "video");
+        const queryText = extractFeatureString(rawTitle, dictListRef.current);
+        safeSendMessage({ type: 'SEARCH', query: queryText }, (response) => {
+          const resData = response?.videosResult?.data?.result;
+          if (resData) {
+            const videoSection = resData.find(s => s.result_type === "video");
             if (videoSection) {
-              const sorted = videoSection.data.filter(v => v.danmaku !== 0).sort((a, b) => {
-                return getMatchScore(b, ytLen, cleanTitle) - getMatchScore(a, ytLen, cleanTitle);
-              });
-              sorted.forEach(v => {
-                if (v.pic?.startsWith('//')) v.pic = v.pic.replace('//', 'https://');
-                v.title = v.title.replace(/<em class="keyword">([\s\S]*?)<\/em>/g, '$1');
-              });
+              const sorted = videoSection.data.filter(v => v.danmaku !== 0).sort((a, b) => Math.abs(parseDuration(a.duration) - getYTDuration()) - Math.abs(parseDuration(b.duration) - getYTDuration()));
+              sorted.forEach(v => { if (v.pic?.startsWith('//')) v.pic = `https:${v.pic}`; v.title = v.title.replace(/<em class="keyword">([\s\S]*?)<\/em>/g, '$1'); });
               setPossibleMatchVideos(sorted);
             }
           }
         });
       }
     }, 1500);
-    
-    setTimeout(() => {
-      clearInterval(checkTitle);
-      setIsRefreshing(false);
-    }, 10000);
+    setTimeout(() => { clearInterval(checkTitle); setIsRefreshing(false); }, 10000);
   };
 
-  // 监听YouTube SPA路由变化
   useEffect(() => {
     const handleUrlChange = () => {
       const currentVid = new URLSearchParams(window.location.search).get('v') || '';
-      if (currentVid !== youtubeUrl) {
-        setYoutubeUrl(currentVid);
-      }
+      if (currentVid !== youtubeUrl) setYoutubeUrl(currentVid);
     };
-    
-    // 监听历史记录变化
     let lastUrl = location.href; 
-    new MutationObserver(() => {
-      if (location.href !== lastUrl) {
-        lastUrl = location.href;
-        handleUrlChange();
-      }
-    }).observe(document, { subtree: true, childList: true });
-    
-    // 监听yt-page-data-updated事件
+    new MutationObserver(() => { if (location.href !== lastUrl) { lastUrl = location.href; handleUrlChange(); } }).observe(document, { subtree: true, childList: true });
     document.addEventListener('yt-page-data-updated', handleUrlChange);
-    
-    return () => {
-      document.removeEventListener('yt-page-data-updated', handleUrlChange);
-    };
+    return () => document.removeEventListener('yt-page-data-updated', handleUrlChange);
   }, [youtubeUrl]);
 
   useEffect(() => {
     if (youtubeUrl) {
-      hasAutoLoaded.current = false;
-      setIsNetworkError(false);
-      setBestMatchVideos([]);
-      setPossibleMatchVideos([]);
-      newVideo();
-
+      hasAutoLoaded.current = false; setIsNetworkError(false); setBestMatchVideos([]); setPossibleMatchVideos([]); newVideo();
       fetch(process.env.REACT_APP_API_BASE_URL + `/api/videos/?youtubeid=${youtubeUrl}`)
-        .then(res => res.json())
-        .then(data => {
+        .then(res => res.json()).then(data => {
           const sorted = data.sort((a, b) => b.numused - a.numused);
           setBestMatchVideos(sorted);
-          if (sorted.length > 0 && !hasAutoLoaded.current) {
-            loadDanmakuByVideo(sorted[0], false); // 自动加载不重报
-            hasAutoLoaded.current = true;
-          }
-        })
-        .catch(() => setIsNetworkError(true));
+          if (sorted.length > 0 && !hasAutoLoaded.current) { loadDanmakuByVideo(sorted[0], false); hasAutoLoaded.current = true; }
+        }).catch(() => setIsNetworkError(true));
 
       let checkTitle = setInterval(() => {
-        const titleEl = document.querySelector('yt-formatted-string.style-scope.ytd-watch-metadata');
-        if (titleEl) {
+        const rawTitle = getYTTitle();
+        if (rawTitle) {
           clearInterval(checkTitle);
-          const ytLen = getYTDuration();
-          const cleanTitle = titleEl.innerText.replace(/\[.*?\]|\(.*?\)/g, '').trim();
-          safeSendMessage({ type: 'SEARCH', query: cleanTitle }, (response) => {
-            if (response?.videosResult) {
-              const videoSection = response.videosResult.data.result.find(s => s.result_type === "video");
+          const queryText = extractFeatureString(rawTitle, dictListRef.current);
+          safeSendMessage({ type: 'SEARCH', query: queryText }, (response) => {
+            const resData = response?.videosResult?.data?.result;
+            if (resData) {
+              const videoSection = resData.find(s => s.result_type === "video");
               if (videoSection) {
-                const sorted = videoSection.data.filter(v => v.danmaku !== 0).sort((a, b) => {
-                  return getMatchScore(b, ytLen, cleanTitle) - getMatchScore(a, ytLen, cleanTitle);
-                });
-                sorted.forEach(v => {
-                  if (v.pic?.startsWith('//')) v.pic = v.pic.replace('//', 'https://');
-                  v.title = v.title.replace(/<em class="keyword">([\s\S]*?)<\/em>/g, '$1');
-                });
+                const sorted = videoSection.data.filter(v => v.danmaku !== 0).sort((a, b) => Math.abs(parseDuration(a.duration) - getYTDuration()) - Math.abs(parseDuration(b.duration) - getYTDuration()));
+                sorted.forEach(v => { if (v.pic?.startsWith('//')) v.pic = `https:${v.pic}`; v.title = v.title.replace(/<em class="keyword">([\s\S]*?)<\/em>/g, '$1'); });
                 setPossibleMatchVideos(sorted);
               }
             }
@@ -275,21 +245,18 @@ function App({ initOpen }) {
   const newVideo = async () => {
     if (!document.getElementsByClassName("DanmuControl")[0]) {
       const DanmuBtn = document.createElement("img");
-      DanmuBtn.src = LogoIcon;
-      DanmuBtn.className = "ytp-button DanmuControl";
-      DanmuBtn.id = "DanmakuControlBtn";
+      DanmuBtn.src = LogoIcon; DanmuBtn.className = "ytp-button DanmuControl";
       const checkExist = setInterval(function() {
         const youtubeRightControls = document.getElementsByClassName("ytp-right-controls")[0];
         if (youtubeRightControls) {
           clearInterval(checkExist);
           const DanmuPanel = appendDanmakuControl(youtubeRightControls, DanmuBtn);
-          const parentWrapper = DanmuPanel.parentElement;
           DanmuBtn.addEventListener("click", () => {
             const res = window.toggleDanmakuVisibility?.();
             res ? DanmuBtn.classList.remove("makeGray") : DanmuBtn.classList.add("makeGray");
           });
-          parentWrapper.addEventListener("mouseenter", () => { DanmuPanel.style.display = "block"; });
-          parentWrapper.addEventListener("mouseleave", () => { DanmuPanel.style.display = "none"; });
+          DanmuPanel.parentElement.addEventListener("mouseenter", () => { DanmuPanel.style.display = "block"; });
+          DanmuPanel.parentElement.addEventListener("mouseleave", () => { DanmuPanel.style.display = "none"; });
         }
       }, 400);
     }
@@ -311,44 +278,98 @@ function App({ initOpen }) {
 
   return (
     <ThemeProvider theme={lightTheme}>
-      <div style={{ backgroundColor: '#ffffff', color: '#0f0f0f' }}>
-        <Button 
-          variant="contained" onClick={handleLogoClick} 
-          style={{ width:'100%', height:'42px', fontSize:'14px', fontWeight:'bold', borderRadius:'21px', backgroundColor:'#f2f2f2', color: '#0f0f0f', display: isPopupOpen ? 'none' : 'block', border:'1px solid #dcdcdc', boxShadow: 'none', textTransform: 'none' }}
-        >
-          ▼ 展开弹幕选择面板 ▼
+      <div style={{ position: 'relative', fontFamily: '"Roboto", Arial, sans-serif' }}>
+        
+        {/* 面板展开按钮 */}
+        <Button variant="contained" onClick={handleLogoClick} style={{ width:'100%', height:'42px', fontSize:'14px', borderRadius:'21px', backgroundColor:'#f2f2f2', color: '#0f0f0f', display: isPopupOpen ? 'none' : 'block', boxShadow: 'none', textTransform: 'none' }}>
+          ▼ 展开弹幕关联面板 ▼
         </Button>
 
-        <div id="DanMuPopup" style={{ display: isPopupOpen ? 'flex' : 'none', flexDirection: 'column', position: 'relative', height:'560px', overflow: 'hidden' }}>
-          <IconButton onClick={handleCloseIconClick} style={{position: 'absolute', top: 5, right: 5, zIndex: 10}}><CloseRoundedIcon/></IconButton>
+        {/* 词典编辑器 - 悬浮模式 (修复拖拽延迟 & 视觉隐藏把手) */}
+        {showDictSettings && (
+          <Draggable 
+            nodeRef={draggableNodeRef} 
+            handle=".drag-handle" 
+            enableUserSelectHack={false}
+          >
+            <div 
+              ref={draggableNodeRef}
+              style={{ 
+                position: 'fixed', top: '100px', right: '40px', width: '560px', 
+                backgroundColor: '#ffffff', borderRadius: '12px', zIndex: 9999, 
+                boxShadow: '0 8px 30px rgba(0,0,0,0.12)', border: '1px solid #eeeeee',
+                display: 'flex', flexDirection: 'column', transition: 'none' 
+              }}
+            >
+              {/* 隐藏式把手：透明区域，仅有关闭按钮 */}
+              <div className="drag-handle" style={{ padding: '8px 12px', cursor: 'grab', display: 'flex', justifyContent: 'flex-end' }}>
+                <IconButton onClick={() => setShowDictSettings(false)} size="small">
+                  <CloseRoundedIcon fontSize="small" style={{ color: '#909090' }}/>
+                </IconButton>
+              </div>
+
+              <div style={{ padding: '0 20px 20px 20px' }}>
+                <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f0f0f', marginBottom: '16px' }}>词典映射管理</div>
+                
+                <div style={{ overflowY: 'auto', maxHeight: '320px', paddingRight: '8px', scrollbarWidth: 'thin' }}>
+                  {dictList.map((item, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                      <input type="text" placeholder="原词" value={item.kr} onChange={(e) => handleDictChange(index, 'kr', e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e5e5e5', borderRadius: '4px', fontSize: '13px', outline: 'none' }} />
+                      <span style={{ color: '#909090' }}>→</span>
+                      <input type="text" placeholder="中文替换" value={item.zh} onChange={(e) => handleDictChange(index, 'zh', e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e5e5e5', borderRadius: '4px', fontSize: '13px', outline: 'none' }} />
+                      <button onClick={() => removeDictRow(index)} style={{ background: 'none', border: 'none', color: '#909090', cursor: 'pointer', fontSize: '20px' }}>×</button>
+                    </div>
+                  ))}
+                </div>
+
+                <button onClick={addDictRow} style={{ width: '100%', padding: '8px', backgroundColor: '#fff', border: '1px dashed #3f3e3e', borderRadius: '8px', color: '#606060', fontSize: '12px', margin: '16px 0', cursor: 'pointer' }}>
+                  + 添加新条目
+                </button>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={clearDict} style={{ padding: '10px 16px', backgroundColor: '#f2f2f2', border: 'none', borderRadius: '18px', fontSize: '13px', color: '#0f0f0f', cursor: 'pointer' }}>清空全部</button>
+                  <button onClick={saveDict} style={{ flex: 1, padding: '10px', backgroundColor: '#0f0f0f', border: 'none', borderRadius: '18px', fontSize: '13px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>保存并应用</button>
+                </div>
+              </div>
+            </div>
+          </Draggable>
+        )}
+
+        {/* 主控制面板 */}
+        <div id="DanMuPopup" style={{ display: isPopupOpen ? 'flex' : 'none', flexDirection: 'column', height:'560px', overflow: 'hidden', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e5e5' }}>
           
-          <div style={{ paddingTop: '40px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid #f2f2f2', gap: '8px' }}>
             <div style={{ flex: 1 }}><CustomizedInputBase onSearchTrigger={handleSearchTrigger}/></div>
-            <button onClick={refreshMatchedVideos} disabled={isRefreshing} style={{ background: 'none', border: 'none', cursor: isRefreshing ? 'not-allowed' : 'pointer', padding: '6px', opacity: isRefreshing ? 0.4 : 0.65 }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }}>
-                <polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36M20.49 15a9 9 0 0 1-14.85 3.36"></path>
-              </svg>
+            
+            <button onClick={() => setShowDictSettings(!showDictSettings)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#606060" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
             </button>
+
+            <button onClick={refreshMatchedVideos} disabled={isRefreshing} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#606060" strokeWidth="2" style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }}><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36M20.49 15a9 9 0 0 1-14.85 3.36"></path></svg>
+            </button>
+
+            <IconButton onClick={handleCloseIconClick} size="small"><CloseRoundedIcon fontSize="small"/></IconButton>
           </div>
-          
-          <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)} onLoadDanmakus={() => { loadDanmakuByVideo(selectedVideo, true); setIsModalOpen(false); }} pic={selectedVideo?.pic} title={selectedVideo?.title} />
-          
-          <div style={{ padding: '10px', overflowY: 'auto', flexGrow: 1, scrollbarWidth: 'thin' }}>
-             {isNetworkError && <p style={{color:'red', fontSize:'12px'}}>网络连接失败，请检查代理</p>}
-             <h1 style={{fontSize:'14px', borderBottom:'1px solid #eee', color:'#0f0f0f', paddingBottom:'5px', marginBottom:'10px'}}>
-               {showMainControls ? '最佳匹配 (由其他用户关联)' : '搜索结果'}
-             </h1>
+
+          <div style={{ padding: '10px', overflowY: 'auto', flexGrow: 1 }}>
+             {isNetworkError && <p style={{color:'#f03131', fontSize:'12px', textAlign:'center'}}>获取数据失败，请检查网络连接</p>}
+             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f0f0f', margin: '8px 0 12px 4px' }}>
+               {showMainControls ? '最佳匹配视频' : '搜索结果'}
+             </div>
              {(showMainControls ? bestMatchVideos : searchMatchVideos).map((v, i) => (
                 <VideoBox key={i} {...v} onClick={() => { setSelectedVideo(v); setIsModalOpen(true); }} />
              ))}
              {showMainControls && (
                 <>
-                  <h1 style={{fontSize:'14px', marginTop:'20px', borderBottom:'1px solid #eee', color:'#0f0f0f', paddingBottom:'5px', marginBottom:'10px'}}>可能匹配 (基于时长和标题)</h1>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f0f0f', margin: '24px 0 12px 4px', borderTop: '1px solid #f2f2f2', paddingTop: '16px' }}>可能匹配的视频</div>
                   {possibleMatchVideos.map((v, i) => <VideoBox key={i} {...v} onClick={() => { setSelectedVideo(v); setIsModalOpen(true); }} />)}
                 </>
              )}
           </div>
         </div>
+
+        <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)} onLoadDanmakus={() => { loadDanmakuByVideo(selectedVideo, true); setIsModalOpen(false); }} pic={selectedVideo?.pic} title={selectedVideo?.title} />
       </div>
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </ThemeProvider>
