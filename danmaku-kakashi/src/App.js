@@ -316,7 +316,7 @@ function App({ initOpen }) {
                     <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
                       <input type="text" placeholder="原词" value={item.kr} onChange={(e) => handleDictChange(index, 'kr', e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e5e5e5', borderRadius: '4px', fontSize: '13px', outline: 'none' }} />
                       <span style={{ color: '#909090' }}>→</span>
-                      <input type="text" placeholder="中文替换" value={item.zh} onChange={(e) => handleDictChange(index, 'zh', e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e5e5e5', borderRadius: '4px', fontSize: '13px', outline: 'none' }} />
+                      <input type="text" placeholder="替换" value={item.zh} onChange={(e) => handleDictChange(index, 'zh', e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e5e5e5', borderRadius: '4px', fontSize: '13px', outline: 'none' }} />
                       <button onClick={() => removeDictRow(index)} style={{ background: 'none', border: 'none', color: '#909090', cursor: 'pointer', fontSize: '20px' }}>×</button>
                     </div>
                   ))}
