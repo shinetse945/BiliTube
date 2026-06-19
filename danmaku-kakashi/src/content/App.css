@@ -76,5 +76,6 @@ a {
 .popupThumbnail img{ width: 100%; height: auto; border-radius: 6px; border: 1px solid #eee; margin-bottom: 10px; }
 .popupbottom { margin: 5px; text-align: center; }
 .hideDanmakus { visibility: hidden; }
-.makeGray { filter: grayscale(100%); }
-.danmu-panel { bottom: 90%; left: 50%; transform: translateX(-50%); }
+/* 弹幕关闭时按钮变暗（适配 SVG 图标按钮，grayscale 对纯白图标无效） */
+.makeGray { opacity: 0.5; }
+/* 面板定位统一交由 DanmakuPanel.css 控制（右对齐、高出进度条），此处不再覆盖 */

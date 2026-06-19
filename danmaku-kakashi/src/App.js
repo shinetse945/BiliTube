@@ -244,8 +244,25 @@ function App({ initOpen }) {
 
   const newVideo = async () => {
     if (!document.getElementsByClassName("DanmuControl")[0]) {
-      const DanmuBtn = document.createElement("img");
-      DanmuBtn.src = LogoIcon; DanmuBtn.className = "ytp-button DanmuControl";
+      // 创建与 YouTube 控制栏风格一致的弹幕按钮（内嵌 SVG 图标）
+      // 与原生控件一致：固定 36x36，SVG 用 100% 填充并由 viewBox 居中绘制
+      const DanmuBtn = document.createElement("button");
+      DanmuBtn.className = "ytp-button DanmuControl";
+      DanmuBtn.title = "弹幕";
+      DanmuBtn.setAttribute("aria-label", "弹幕");
+      DanmuBtn.innerHTML = `
+        <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
+          <g fill="#ffffff">
+            <!-- 飞行的弹幕子弹：圆头 + 拖尾，与字幕 CC 方框明显区分 -->
+            <circle cx="9" cy="10" r="2.6"></circle>
+            <rect x="12" y="8.6" width="16" height="2.8" rx="1.4"></rect>
+            <circle cx="25" cy="18" r="2.6"></circle>
+            <rect x="8" y="16.6" width="15" height="2.8" rx="1.4"></rect>
+            <circle cx="11" cy="26" r="2.6"></circle>
+            <rect x="14" y="24.6" width="14" height="2.8" rx="1.4"></rect>
+          </g>
+        </svg>
+      `;
       const checkExist = setInterval(function() {
         const youtubeRightControls = document.getElementsByClassName("ytp-right-controls")[0];
         if (youtubeRightControls) {

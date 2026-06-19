@@ -1,13 +1,44 @@
+/* 包裹层与原生 ytp-button 尺寸一致，作为按钮和面板的共同定位基准 */
 .danmu-control-wrapper {
     position: relative;
     display: inline-block;
+    vertical-align: top;
+    height: 100%;
+}
+
+/* 弹幕按钮：与 YouTube 原生控件一致，去掉默认内边距并让 SVG 居中 */
+.DanmuControl.ytp-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* 与原生控件一致的宽度，给 hover 圆形高亮留出空间，避免左右圆弧被裁切 */
+    width: 54px;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    vertical-align: top;
+    box-sizing: border-box;
+    overflow: visible;
+    opacity: 0.9;
+}
+.DanmuControl.ytp-button:hover {
+    opacity: 1;
+}
+.DanmuControl.ytp-button svg {
+    display: block;
+    /* 图标放大，使视觉重量接近原生控件 */
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
 }
 
 .danmu-panel {
     position: absolute;
     /* 高出进度条与控制栏一点，避免重叠 */
     bottom: calc(100% + 12px);
-    right: 0;
+    /* 以按钮中线为锚点向左展开，避免被相邻的设置面板挤偏 */
+    right: 50%;
+    transform: translateX(50%);
 
     width: 290px;
     max-height: 60vh;
