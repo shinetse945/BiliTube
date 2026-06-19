@@ -20,7 +20,6 @@ BiliTube/                        ← Git 仓库根目录
 ├── TECHNICAL.md                  ← 本技术文档
 ├── LICENSE
 ├── .gitignore
-├── .idea/                        ← IDE（IntelliJ/WebStorm）配置目录
 ├── extension/                    ← 【编译输出目录】，Chrome 加载此文件夹
 │   ├── manifest.json             ← 由 build.js 从 public/ 复制
 │   ├── background.js             ← 由 build.js 从 public/ 复制
