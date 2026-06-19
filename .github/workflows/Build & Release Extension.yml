@@ -30,7 +30,7 @@ jobs:
 
       - name: Package extension into zip
         run: |
-          zip -r bilitube-build.zip extensions/
+          zip -r bilitube-build.zip extension/
 
       - name: Upload zip to release
         # 只有当触发类型为 release 时才运行
