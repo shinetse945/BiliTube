@@ -17,7 +17,7 @@
 
 ##### 如何使用
 
-1、下载并解压BiliTube.v某某.zip。
+1、下载并解压BiliTube-v某某.zip。
 
 2、打开 chrome://extensions/，开启 “开发者模式”。
 
