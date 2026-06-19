@@ -42,7 +42,7 @@
 
 ##### 图片演示
 
-<img width="2455" height="1404" alt="image" src="https://github.com/user-attachments/assets/993dfcfc-274e-493c-8448-45af9475da7a" />
+<img width="2451" height="1341" alt="image" src="https://github.com/user-attachments/assets/7c039ed4-1fc7-48d8-a61d-801ebecf8107" />
 
 ##### 原项目作者
 
