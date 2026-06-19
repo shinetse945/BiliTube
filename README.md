@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/BiliTube/bilitube/main/icons/logoicon-cropped.png" width="128">
+<img src="https://raw.githubusercontent.com/shinetse945/BiliTube/main/bilitube/public/icons/logoicon-cropped.png" width="128">
 </p>
 
 <h1 align="center">BiliTube</h1>
