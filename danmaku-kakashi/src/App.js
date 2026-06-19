@@ -331,8 +331,8 @@ function App({ initOpen }) {
             >
               {/* 隐藏式把手：透明区域，仅有关闭按钮 */}
               <div className="drag-handle" style={{ padding: '8px 12px', cursor: 'grab', display: 'flex', justifyContent: 'flex-end' }}>
-                <IconButton onClick={() => setShowDictSettings(false)} size="small">
-                  <CloseRoundedIcon fontSize="small" style={{ color: '#909090' }}/>
+                <IconButton onClick={() => setShowDictSettings(false)} size="medium">
+                  <CloseRoundedIcon style={{ fontSize: 28, color: '#909090' }}/>
                 </IconButton>
               </div>
 
@@ -377,7 +377,7 @@ function App({ initOpen }) {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#606060" strokeWidth="2" style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }}><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36M20.49 15a9 9 0 0 1-14.85 3.36"></path></svg>
             </button>
 
-            <IconButton onClick={handleCloseIconClick} size="small"><CloseRoundedIcon fontSize="small"/></IconButton>
+            <IconButton onClick={handleCloseIconClick} size="medium"><CloseRoundedIcon style={{ fontSize: 28 }}/></IconButton>
           </div>
 
           <div style={{ padding: '10px', overflowY: 'auto', flexGrow: 1 }}>
