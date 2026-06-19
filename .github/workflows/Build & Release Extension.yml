@@ -28,23 +28,33 @@ jobs:
         working-directory: bilitube
         run: npm run prod
 
+      # 从 manifest.json 读取项目名与版本号，组成 <name>-<version>
+      - name: Read name & version from manifest
+        id: meta
+        run: |
+          NAME=$(jq -r '.name' extension/manifest.json)
+          VERSION=$(jq -r '.version' extension/manifest.json)
+          echo "package=${NAME}-${VERSION}" >> "$GITHUB_OUTPUT"
+
+      # 进入 extension/ 内压缩，避免多一层目录
       - name: Package extension into zip
         run: |
-          zip -r bilitube-build.zip extension/
+          cd extension
+          zip -r "../${{ steps.meta.outputs.package }}.zip" .
 
+      # release 触发时上传 zip 作为 release 资产
       - name: Upload zip to release
-        # 只有当触发类型为 release 时才运行
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: bilitube-*.zip
+          files: ${{ steps.meta.outputs.package }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 手动触发时直接上传 extension 目录内容，避免双重压缩
       - name: Upload artifact
-        # 仅当手动触发时运行
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: bilitube-manual-build
-          path: bilitube-*.zip
+          name: ${{ steps.meta.outputs.package }}
+          path: extension/
