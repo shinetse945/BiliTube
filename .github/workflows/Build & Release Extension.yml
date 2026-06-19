@@ -30,8 +30,7 @@ jobs:
 
       - name: Package extension into zip
         run: |
-          cd extension
-          zip -r ../bilitube-${{github.event.release.tag_name}}.zip *
+          zip -r bilitube-build.zip extension/
 
       - name: Upload zip to release
         # 只有当触发类型为 release 时才运行
