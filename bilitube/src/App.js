@@ -291,14 +291,14 @@ function App({ initOpen }) {
   };
 
   const handleCloseIconClick = () => {
-    const root = document.getElementById('danmaku-kakashi-root');
+    const root = document.getElementById('bilitube-root');
     if (root) root.style.height = '42px';
     setTimeout(() => setIsPopupOpen(false), 150);
     chrome.storage.sync.set({MainPanel: false});
   };
 
   const handleLogoClick = () => {
-    const root = document.getElementById('danmaku-kakashi-root');
+    const root = document.getElementById('bilitube-root');
     setIsPopupOpen(true);
     if (root) root.style.height = '600px';
     chrome.storage.sync.set({MainPanel: true});

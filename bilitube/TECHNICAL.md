@@ -276,7 +276,7 @@ npm.cmd run prod
 
 ## 11. 注意事项
 
-1. **编译必须在 `danmaku-kakashi/` 目录下执行**（`cd danmaku-kakashi` 然后 `npm.cmd run prod`）
+1. **编译必须在 `bilitube/` 目录下执行**（`cd bilitube` 然后 `npm.cmd run prod`）
 2. **`extension/` 目录不要手动修改**，它的内容由编译流程自动生成
 3. `DamakuPanel.js`（注意拼写）是旧版废弃代码，当前生效的是 `DanmakuPanel.js`
 4. `CommentCoreLibrary.js` 是第三方库的本地副本，约 2500 行，不建议修改

@@ -13,7 +13,7 @@ function injectDanmakuDOM() {
     danmakuContainerInjecting.id = "danmaku-container-injecting";
     document.body.appendChild(danmakuContainerInjecting);
 
-    console.log("[Danmaku-Kakashi] 正在注入弹幕 DOM 容器...");
+    console.log("[BiliTube] 正在注入弹幕 DOM 容器...");
 
     let danmakuDOM = document.getElementById("danmaku-container");
 
@@ -21,7 +21,7 @@ function injectDanmakuDOM() {
     if (danmakuDOM) {
         if (typeof window.resetDanmakus === 'function') {
             window.resetDanmakus();
-            console.log("[Danmaku-Kakashi] 已重置弹幕容器");
+            console.log("[BiliTube] 已重置弹幕容器");
         }
         danmakuContainerInjecting.remove();
     } else {
@@ -34,7 +34,7 @@ function injectDanmakuDOM() {
             const movie_player = document.getElementById('movie_player');
 
             if (videoPlayer && movie_player) {
-                console.log("[Danmaku-Kakashi] 视频播放器已找到");
+                console.log("[BiliTube] 视频播放器已找到");
                 const width = movie_player.offsetWidth || 640;
                 const height = movie_player.offsetHeight || 360;
 
@@ -62,7 +62,7 @@ function injectDanmakuDOM() {
                 );
 
                 danmakuContainerInjecting.remove();
-                console.log("[Danmaku-Kakashi] 弹幕容器渲染完毕，全局函数已就绪");
+                console.log("[BiliTube] 弹幕容器渲染完毕，全局函数已就绪");
             }
         }, 200); // 每 200ms 检查一次
     }
@@ -70,7 +70,7 @@ function injectDanmakuDOM() {
 
 function handleBackgroundMessage(request, sender, sendResponse) {
     if (request.type === 'youtubeid') {
-        console.log("[Danmaku-Kakashi] 收到背景脚本消息，触发注入");
+        console.log("[BiliTube] 收到背景脚本消息，触发注入");
         injectDanmakuDOM();
     }
 }
@@ -83,7 +83,7 @@ function DanmakuHelper() {
     // 2. 【核心修复】：如果是刷新页面，主动执行一次注入
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('v')) {
-        console.log("[Danmaku-Kakashi] 检测到视频页面，主动开启弹幕环境");
+        console.log("[BiliTube] 检测到视频页面，主动开启弹幕环境");
         injectDanmakuDOM();
     }
 }

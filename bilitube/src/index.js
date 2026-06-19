@@ -10,7 +10,7 @@ import './i18n/i18n';
 
 const theme = createTheme({ palette: { mode: 'light' } });
 const rootElement = document.createElement("div");
-rootElement.id = 'danmaku-kakashi-root';
+rootElement.id = 'bilitube-root';
 
 // 基础 CSS 注入
 const globalStyles = document.createElement("style");
@@ -59,7 +59,7 @@ function startPlugin() {
 
 const observer = new MutationObserver(() => {
   const youtubeSideBar = document.getElementById("secondary-inner");
-  const isInjected = document.getElementById("danmaku-kakashi-root");
+  const isInjected = document.getElementById("bilitube-root");
   if (youtubeSideBar && !isInjected) {
     youtubeSideBar.prepend(rootElement);
     startPlugin();
@@ -68,7 +68,7 @@ const observer = new MutationObserver(() => {
 observer.observe(document.body, { childList: true, subtree: true });
 
 window.addEventListener('yt-navigate-finish', () => {
-  if (document.getElementById("danmaku-kakashi-root")) {
+  if (document.getElementById("bilitube-root")) {
     startPlugin();
   }
 });

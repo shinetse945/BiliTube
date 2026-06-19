@@ -1,9 +1,9 @@
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/Danmaku-Kakashi/Danmaku-Kakashi-Ext/Add-basic-user-functionality/extension/icons/logoicon-cropped.png" alt="" width="128">
+<img src="https://raw.githubusercontent.com/shinetse945/BiliTube/Add-basic-user-functionality/extension/icons/logoicon-cropped.png" alt="" width="128">
 </p>
 
-<h1 align="center">Danmaku Kakashi</h1>
+<h1 align="center">BiliTube</h1>
 
 ### 因原项目不再更新，本项目为个人维护后在原项目最新版本v1.0.3后升级的版本
 
@@ -42,7 +42,7 @@
 
 ##### 视频演示
 
-[<img src="https://raw.githubusercontent.com/Danmaku-Kakashi/Danmaku-Kakashi-Ext/main/danmaku-kakashi/public/videoCover_zh.png" alt="播放演示" width="512" style="zoom: 50%;" />](https://www.youtube.com/watch?v=U25MSKsE_pQ)
+[<img src="https://raw.githubusercontent.com/shinetse945/BiliTube/main/bilitube/public/videoCover_zh.png" alt="播放演示" width="512" style="zoom: 50%;" />](https://www.youtube.com/watch?v=U25MSKsE_pQ)
 
 ##### 原项目作者
 

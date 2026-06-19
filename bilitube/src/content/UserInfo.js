@@ -29,7 +29,7 @@ export function WebMenu() {
         'site': process.env.REACT_APP_API_WEB_URL,
         'docs': process.env.REACT_APP_API_WEB_URL + '/docs',
         'about': process.env.REACT_APP_API_WEB_URL + '/about',
-        'github': 'https://github.com/Danmaku-Kakashi/Danmaku-Kakashi-Ext',
+        'github': 'https://github.com/shinetse945/BiliTube',
         'donate': process.env.REACT_APP_API_WEB_URL + '/donate'
     }
     const handleItemClick = (url) => {
