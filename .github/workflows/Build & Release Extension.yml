@@ -34,7 +34,7 @@ jobs:
         run: |
           NAME=$(jq -r '.name' extension/manifest.json)
           VERSION=$(jq -r '.version' extension/manifest.json)
-          echo "package=${NAME}-${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "package=${NAME}-v${VERSION}" >> "$GITHUB_OUTPUT"
 
       # 进入 extension/ 内压缩，避免多一层目录
       - name: Package extension into zip
