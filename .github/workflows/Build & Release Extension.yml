@@ -1,6 +1,7 @@
 name: Build & Release Extension
 
 on:
+  workflow_dispatch:
   release:
     types: [created]
 
