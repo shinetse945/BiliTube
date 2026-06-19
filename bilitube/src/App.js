@@ -251,15 +251,15 @@ function App({ initOpen }) {
       DanmuBtn.title = "弹幕";
       DanmuBtn.setAttribute("aria-label", "弹幕");
       DanmuBtn.innerHTML = `
-        <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
+        <svg version="1.1" viewBox="0 0 24 24">
           <g fill="#ffffff">
-            <!-- 飞行的弹幕子弹：圆头 + 拖尾，与字幕 CC 方框明显区分 -->
-            <circle cx="9" cy="10" r="2.6"></circle>
-            <rect x="12" y="8.6" width="16" height="2.8" rx="1.4"></rect>
-            <circle cx="25" cy="18" r="2.6"></circle>
-            <rect x="8" y="16.6" width="15" height="2.8" rx="1.4"></rect>
-            <circle cx="11" cy="26" r="2.6"></circle>
-            <rect x="14" y="24.6" width="14" height="2.8" rx="1.4"></rect>
+            <!-- 飞行的弹幕子弹：圆头 + 拖尾，整体在 24x24 内水平居中 -->
+            <circle cx="5" cy="6" r="1.8"></circle>
+            <rect x="8" y="5" width="11" height="2" rx="1"></rect>
+            <circle cx="17" cy="12" r="1.8"></circle>
+            <rect x="5" y="11" width="10" height="2" rx="1"></rect>
+            <circle cx="7" cy="18" r="1.8"></circle>
+            <rect x="10" y="17" width="9" height="2" rx="1"></rect>
           </g>
         </svg>
       `;
