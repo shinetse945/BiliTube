@@ -1,6 +1,6 @@
-https://github.com/shinetse945/BiliTube/blob/main/README.md
+
 <p align="center">
-<img width="128" height="128" alt="logoicon-cropped" src="https://github.com/user-attachments/assets/ad918e60-0c6a-4686-bf9b-f94e69536a4c" />
+<img src="https://raw.githubusercontent.com/BiliTube/bilitube/main/icons/logoicon-cropped.png" width="128">
 </p>
 
 <h1 align="center">BiliTube</h1>
