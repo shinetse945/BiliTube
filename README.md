@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/shinetse945/BiliTube/Add-basic-user-functionality/extension/icons/logoicon-cropped.png" alt="" width="128">
+<img width="380" height="380" alt="logoicon-cropped" src="https://github.com/user-attachments/assets/ad918e60-0c6a-4686-bf9b-f94e69536a4c" />
 </p>
 
 <h1 align="center">BiliTube</h1>
@@ -40,7 +40,7 @@
 
 - [Comment Core Library](https://github.com/jabbany/CommentCoreLibrary) - Licensed under the MIT license
 
-##### 视频演示
+##### 图片演示
 
 [<img src="https://raw.githubusercontent.com/shinetse945/BiliTube/main/bilitube/public/videoCover_zh.png" alt="播放演示" width="512" style="zoom: 50%;" />](https://www.youtube.com/watch?v=U25MSKsE_pQ)
 
