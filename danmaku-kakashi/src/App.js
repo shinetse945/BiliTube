@@ -251,12 +251,23 @@ function App({ initOpen }) {
         if (youtubeRightControls) {
           clearInterval(checkExist);
           const DanmuPanel = appendDanmakuControl(youtubeRightControls, DanmuBtn);
-          DanmuBtn.addEventListener("click", () => {
-            const res = window.toggleDanmakuVisibility?.();
-            res ? DanmuBtn.classList.remove("makeGray") : DanmuBtn.classList.add("makeGray");
+
+          // 点击按钮切换面板显示/隐藏（仿 YouTube 设置面板行为）
+          DanmuBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            DanmuPanel.style.display = DanmuPanel.style.display === "block" ? "none" : "block";
           });
-          DanmuPanel.parentElement.addEventListener("mouseenter", () => { DanmuPanel.style.display = "block"; });
-          DanmuPanel.parentElement.addEventListener("mouseleave", () => { DanmuPanel.style.display = "none"; });
+
+          // 点击面板内部不关闭面板
+          DanmuPanel.addEventListener("click", (e) => { e.stopPropagation(); });
+
+          // 点击页面其他位置时关闭面板
+          document.addEventListener("click", () => { DanmuPanel.style.display = "none"; });
+
+          // 同步开关弹幕的初始按钮状态
+          chrome.storage.sync.get(["danmakuEnabled"], (result) => {
+            if (result.danmakuEnabled === false) DanmuBtn.classList.add("makeGray");
+          });
         }
       }, 400);
     }

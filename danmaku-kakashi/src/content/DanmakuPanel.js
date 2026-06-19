@@ -10,7 +10,7 @@ const init_settings = {
     fontSize: 100,
     speed: 50,
   };
-  
+
   // Helper function to translate maxDanmakuAmount slider value
   const translateMaxDanmakuAmount = (value) => {
     const mapping = {
@@ -22,69 +22,68 @@ const init_settings = {
     };
     return mapping[value] !== undefined ? mapping[value] : 100;
   };
-  
+
   const DanmuPanel = () => {
-    const { t } = useTranslation(); // Uncomment and use if localization is needed
-  
+    const { t } = useTranslation();
+
     // State for settings
     const [settings, setSettings] = useState(init_settings);
     const [currentOffset, setCurrentOffset] = useState(0.0);
     const [timeAdjustInput, setTimeAdjustInput] = useState('');
     const [warningVisible, setWarningVisible] = useState(false);
-  
+    // Danmaku on/off state (moved into the panel)
+    const [danmakuEnabled, setDanmakuEnabled] = useState(true);
+
     const debounceTimer = useRef(null);
-  
+
     // Fetch settings from chrome.storage on mount
     useEffect(() => {
-      chrome.storage.sync.get(['danmakuSettings'], (result) => {
+      chrome.storage.sync.get(['danmakuSettings', 'danmakuEnabled'], (result) => {
         const storedSettings = result.danmakuSettings || init_settings;
         setSettings(storedSettings);
+        // default to enabled when not previously set
+        setDanmakuEnabled(result.danmakuEnabled !== false);
       });
     }, []);
-  
+
     // Update chrome.storage whenever settings change
     useEffect(() => {
-      chrome.storage.sync.set({ danmakuSettings: settings }, () => {
-        console.log('Settings saved:', settings);
-      });
+      chrome.storage.sync.set({ danmakuSettings: settings });
     }, [settings]);
-  
+
     // Handle slider changes with debouncing
     const handleSliderChange = (e) => {
       const { id, value } = e.target;
-      let displayValue = value;
-  
-      // Update display value based on slider
-      if (id === 'maxDanmakuAmount') {
-        displayValue = translateMaxDanmakuAmount(value);
-        // If unlimited, display as such
-        if (displayValue === -1) {
-          displayValue = t('Unlimited');
-        } else {
-          displayValue = displayValue;
-        }
-      } else {
-        displayValue = `${value}${id === 'opacity' || id === 'fontSize' ? '%' : ''}`;
-      }
-  
+
       // Update settings state
       setSettings((prev) => ({
         ...prev,
         [id]: parseInt(value, 10),
       }));
-  
+
       // Debounce saving settings
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
       }
-  
+
       debounceTimer.current = setTimeout(() => {
         // Settings are already updated in state, so no action needed here
-        // If you need to perform additional actions after saving, do it here
-        console.log('Debounced settings:', settings);
       }, 250);
     };
-  
+
+    // Toggle danmaku visibility from inside the panel
+    const handleToggleDanmaku = () => {
+      const res = window.toggleDanmakuVisibility?.();
+      const next = typeof res === 'boolean' ? res : !danmakuEnabled;
+      setDanmakuEnabled(next);
+      chrome.storage.sync.set({ danmakuEnabled: next });
+      // keep the toolbar button icon in sync
+      const btn = document.getElementsByClassName('DanmuControl')[0];
+      if (btn) {
+        next ? btn.classList.remove('makeGray') : btn.classList.add('makeGray');
+      }
+    };
+
     // Handle apply time adjustment
     const handleApplyTime = () => {
       const val = parseFloat(timeAdjustInput.trim());
@@ -93,28 +92,27 @@ const init_settings = {
         setTimeAdjustInput('');
       } else {
         setWarningVisible(false);
-        setCurrentOffset((prev) => prev + val);
+        const newOffset = currentOffset + val;
+        setCurrentOffset(newOffset);
         setTimeAdjustInput('');
-  
-        // Update the offset in the app if needed
+
         const danmakuOffsetElement = document.getElementById('danmaku-offset');
         if (danmakuOffsetElement) {
-          danmakuOffsetElement.textContent = currentOffset + val;
+          danmakuOffsetElement.textContent = newOffset;
         }
       }
     };
-  
+
     // Handle clear time adjustment
     const handleClearTime = () => {
       setWarningVisible(false);
       setCurrentOffset(0.0);
-      // Update the offset in the app if needed
       const danmakuOffsetElement = document.getElementById('danmaku-offset');
       if (danmakuOffsetElement) {
         danmakuOffsetElement.textContent = '0.0';
       }
     };
-  
+
     // Handle keydown in time adjust input
     const handleTimeAdjustKeyDown = (e) => {
       const blockedKeys = [
@@ -139,12 +137,25 @@ const init_settings = {
         e.stopPropagation();
       }
     };
-  
+
     return (
       <div className="danmu-panel" id="DanmuControlPanel">
-  
+
         <h3>{t('Danmaku Settings')}</h3>
-  
+
+        {/* Danmaku on/off toggle */}
+        <div className="danmu-toggle-group">
+          <span className="slider-label">{t('Show Danmaku')}</span>
+          <label className="danmu-switch">
+            <input
+              type="checkbox"
+              checked={danmakuEnabled}
+              onChange={handleToggleDanmaku}
+            />
+            <span className="danmu-switch-slider"></span>
+          </label>
+        </div>
+
         {/* Max Danmaku Amount */}
         <div className="slider-group">
           <span className="slider-label">{t('Max Danmaku Count')}</span>
@@ -172,7 +183,7 @@ const init_settings = {
               : translateMaxDanmakuAmount(settings.maxDanmakuAmount)}
           </span>
         </div>
-  
+
         {/* Opacity */}
         <div className="slider-group">
           <span className="slider-label">{t('Opacity')}</span>
@@ -187,7 +198,7 @@ const init_settings = {
           />
           <span className="slider-value">{`${settings.opacity}%`}</span>
         </div>
-  
+
         {/* Font Size */}
         <div className="slider-group">
           <span className="slider-label">{t('Font Size')}</span>
@@ -202,7 +213,7 @@ const init_settings = {
           />
           <span className="slider-value">{`${settings.fontSize}%`}</span>
         </div>
-  
+
         {/* Speed */}
         <div className="slider-group">
           <span className="slider-label">{t('Speed')}</span>
@@ -217,7 +228,7 @@ const init_settings = {
           />
           <span className="slider-value">{settings.speed}</span>
         </div>
-  
+
         {/* Time Adjust Section */}
         <div className="time-adjust-section">
           <div className="time-adjust-header">
@@ -227,7 +238,7 @@ const init_settings = {
               {currentOffset.toFixed(1)}s
             </div>
           </div>
-  
+
           <div className="time-adjust-row">
             <input
               type="text"
@@ -244,7 +255,12 @@ const init_settings = {
                 {t('Clear')}
             </button>
           </div>
-          <div className="time-adjust-warning">t{('Invalid Input')}</div>
+          <div
+            className="time-adjust-warning"
+            style={{ display: warningVisible ? 'block' : 'none' }}
+          >
+            {t('Invalid Input')}
+          </div>
         </div>
       </div>
     );
@@ -253,6 +269,7 @@ const init_settings = {
 function appendDanmakuControl(youtubeRightControls, DanmuBtn) {
     // create a wrapper to hold both button and panel
     const parentWrapper = document.createElement("div");
+    parentWrapper.className = "danmu-control-wrapper";
     parentWrapper.style.position = "relative";
     parentWrapper.style.display = "inline-block";
 
@@ -266,11 +283,11 @@ function appendDanmakuControl(youtubeRightControls, DanmuBtn) {
             <DanmuPanel />
         </>
     );
-  
-    // add event listener to DanmuBtn to toggle the panel
+
+    // assemble: button + panel inside the wrapper
     parentWrapper.appendChild(DanmuBtn);
     parentWrapper.appendChild(DanmuPan);
-  
+
     // append the wrapper to the right controls
     youtubeRightControls.prepend(parentWrapper);
 

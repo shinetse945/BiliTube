@@ -1,124 +1,216 @@
+.danmu-control-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 .danmu-panel {
-    /* hide by default
-    display: none; */
-
     position: absolute;
+    /* 高出进度条与控制栏一点，避免重叠 */
+    bottom: calc(100% + 12px);
+    right: 0;
 
-    width: 240px;
-    padding: 0px 24px; 
-    line-height: 35px !important;
+    width: 290px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 12px 16px;
+    box-sizing: border-box;
 
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    border-radius: 4px;
-    z-index: 9999;  /* make sure it's on top of everything */
-    font-family: "Microsoft YaHei", sans-serif;
+    /* 与 YouTube 播放器设置面板一致的外观 */
+    background-color: rgba(28, 28, 28, 0.9);
+    color: #eee;
+    border-radius: 12px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+    z-index: 2147483647;
+    font-family: "YouTube Noto", Roboto, "Microsoft YaHei", Arial, sans-serif;
+    font-size: 13px;
+    line-height: normal;
+    text-align: left;
+    text-shadow: none;
+    cursor: default;
+}
+
+/* YouTube 风格的细滚动条 */
+.danmu-panel::-webkit-scrollbar {
+    width: 6px;
+}
+.danmu-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
 }
 
 .danmu-panel h3 {
-    margin: 2px 0 !important;
+    margin: 0 0 10px 0;
+    padding-bottom: 8px;
     font-size: 14px;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* 开关弹幕行（仿 YouTube 菜单项） */
+.danmu-toggle-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+    margin-bottom: 4px;
+}
+.danmu-toggle-group .slider-label {
+    flex: 1;
+    text-align: left;
+    font-size: 13px;
+}
+
+/* YouTube 风格滑动开关 */
+.danmu-switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 14px;
+    flex: 0 0 auto;
+}
+.danmu-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.danmu-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #6f6f6f;
+    border-radius: 14px;
+    transition: background-color 0.1s ease;
+}
+.danmu-switch-slider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: -1px;
+    top: -2px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.1s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.danmu-switch input:checked + .danmu-switch-slider {
+    background-color: rgba(255, 65, 49, 0.5);
+}
+.danmu-switch input:checked + .danmu-switch-slider::before {
+    transform: translateX(19px);
+    background-color: rgb(255, 65, 49);
 }
 
 .slider-group {
-    margin: 2px 0 !important;
     display: flex;
     align-items: center;
+    height: 36px;
 }
 
 .slider-label {
-    flex: 0 0 60px;
+    flex: 0 0 64px;
     font-size: 13px;
-    text-align: center;
+    text-align: left;
+    color: #eee;
 }
 
 .danmu-slider {
-    flex: 1;    
+    flex: 1;
 }
 
 .slider-value {
-    width: 40px;
-    text-align: center;
-    margin-left: 6px;
+    width: 42px;
+    text-align: right;
+    margin-left: 8px;
     font-size: 13px;
+    color: #ccc;
 }
+
 .danmu-slider[type=range] {
-    -webkit-appearance: none; /* remove default style */
-    height: 4px;
-    background: #555;
+    -webkit-appearance: none;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
     outline: none;
 }
 
 .danmu-slider[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    background: rgba(255, 65, 49);
+    width: 13px;
+    height: 13px;
+    background: rgb(255, 65, 49);
     border-radius: 50%;
     cursor: pointer;
-    margin-top: -3px; 
+    margin-top: 0;
 }
-
 
 /* time adjust section */
 .time-adjust-section {
-    margin-top: 10px;
-    border-top: 1px solid #555;
-    padding-top: 8px;
+    margin-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 10px;
 }
-/* Title area, left is the title, right is the current offset */
 .time-adjust-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 .time-adjust-header h4 {
     margin: 0;
     font-size: 13px;
+    font-weight: 500;
 }
 .time-current-offset {
-    font-size: 13px;
+    font-size: 12px;
+    color: #ccc;
 }
 
-/* 输入+按钮 行 */
 .time-adjust-row {
     display: flex;
     align-items: center;
-    margin-bottom: 4px; 
+    margin-bottom: 4px;
     width: 100%;
 }
 .time-adjust-input {
-    flex: 0 0 auto; 
-    width: 120px; 
-    padding: 4px 6px;
-    margin-right: 4px; 
-    border-radius: 3px;
-    border: 1px solid #666;
-    background: #222;
+    flex: 1;
+    min-width: 0;
+    padding: 5px 8px;
+    margin-right: 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(0, 0, 0, 0.4);
     color: #fff;
+    font-size: 12px;
+    box-sizing: border-box;
 }
 .time-apply-button,
 .time-clear-button {
-    padding: 2px 6px; 
-    margin-right: 4px; 
-    background: #444;
+    padding: 5px 10px;
+    margin-right: 6px;
+    background: rgba(255, 255, 255, 0.12);
     color: #fff;
-    border: 1px solid #666;
-    border-radius: 3px;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 12px; 
-    min-width: 50px; 
+    font-size: 12px;
+    min-width: 48px;
+    transition: background-color 0.1s ease;
 }
-/* leave space for the clear button */
+.time-apply-button:hover,
+.time-clear-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
 .time-clear-button {
     margin-right: 0;
 }
 
-/* invalid input warning */
 .time-adjust-warning {
     font-size: 12px;
     color: #ff4f4f;
-    display: none; 
+    display: none;
+    margin-top: 4px;
 }
