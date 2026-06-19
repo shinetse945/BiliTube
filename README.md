@@ -5,7 +5,7 @@
 
 <h1 align="center">BiliTube</h1>
 
-### 因原项目不再更新，本项目为个人维护后在原项目最新版本v1.0.3后升级的版本
+### 本项目为在[Danmaku-Kakashi-Ext](https://github.com/Danmaku-Kakashi/Danmaku-Kakashi-Ext)基础上二次开发的项目
 
 ### 在 YouTube™上享受弹幕
 
