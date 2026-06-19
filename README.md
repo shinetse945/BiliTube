@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/shinetse945/BiliTube/main/bilitube/public/icons/logoicon-cropped.png" width="128">
+<img src="https://raw.githubusercontent.com/shinetse945/BiliTube/main/bilitube/public/icons/logoicon-cropped.png?v=1" width="128">
 </p>
 
 <h1 align="center">BiliTube</h1>
@@ -42,7 +42,7 @@
 
 ##### 图片演示
 
-[<img src="https://raw.githubusercontent.com/shinetse945/BiliTube/main/bilitube/public/videoCover_zh.png" alt="播放演示" width="512" style="zoom: 50%;" />](https://www.youtube.com/watch?v=U25MSKsE_pQ)
+<img width="2455" height="1404" alt="image" src="https://github.com/user-attachments/assets/993dfcfc-274e-493c-8448-45af9475da7a" />
 
 ##### 原项目作者
 
