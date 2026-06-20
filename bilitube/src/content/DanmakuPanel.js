@@ -29,8 +29,6 @@ const init_settings = {
     // State for settings
     const [settings, setSettings] = useState(init_settings);
     const [currentOffset, setCurrentOffset] = useState(0.0);
-    const [timeAdjustInput, setTimeAdjustInput] = useState('');
-    const [warningVisible, setWarningVisible] = useState(false);
     // Danmaku on/off state (moved into the panel)
     const [danmakuEnabled, setDanmakuEnabled] = useState(true);
 
@@ -84,58 +82,24 @@ const init_settings = {
       }
     };
 
-    // Handle apply time adjustment
-    const handleApplyTime = () => {
-      const val = parseFloat(timeAdjustInput.trim());
-      if (isNaN(val)) {
-        setWarningVisible(true);
-        setTimeAdjustInput('');
-      } else {
-        setWarningVisible(false);
-        const newOffset = currentOffset + val;
-        setCurrentOffset(newOffset);
-        setTimeAdjustInput('');
-
-        const danmakuOffsetElement = document.getElementById('danmaku-offset');
-        if (danmakuOffsetElement) {
-          danmakuOffsetElement.textContent = newOffset;
-        }
-      }
-    };
-
-    // Handle clear time adjustment
-    const handleClearTime = () => {
-      setWarningVisible(false);
-      setCurrentOffset(0.0);
+    // 写入偏移到隐藏元素，触发 Danmaku.js 的 MutationObserver
+    const writeOffset = (value) => {
+      const rounded = Math.round(value * 10) / 10; // 规避浮点累加误差
+      setCurrentOffset(rounded);
       const danmakuOffsetElement = document.getElementById('danmaku-offset');
       if (danmakuOffsetElement) {
-        danmakuOffsetElement.textContent = '0.0';
+        danmakuOffsetElement.textContent = rounded.toFixed(1);
       }
     };
 
-    // Handle keydown in time adjust input
-    const handleTimeAdjustKeyDown = (e) => {
-      const blockedKeys = [
-        'ArrowLeft',
-        'ArrowRight',
-        'ArrowUp',
-        'ArrowDown',
-        'PageUp',
-        'PageDown',
-        '1',
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
-        '7',
-        '8',
-        '9',
-        '0',
-      ];
-      if (blockedKeys.includes(e.key)) {
-        e.stopPropagation();
-      }
+    // 按步进调整偏移（+0.1 / -0.1）
+    const handleStepTime = (step) => {
+      writeOffset(currentOffset + step);
+    };
+
+    // 重置偏移
+    const handleClearTime = () => {
+      writeOffset(0);
     };
 
     return (
@@ -233,33 +197,21 @@ const init_settings = {
         <div className="time-adjust-section">
           <div className="time-adjust-header">
             <h4>{t('Danmaku time offset')}</h4>
-            <div className="time-current-offset">
-              {t('Current offset')} {currentOffset >= 0 ? '+' : ''}
-              {currentOffset.toFixed(1)}s
-            </div>
           </div>
 
-          <div className="time-adjust-row">
-            <input
-              type="text"
-              className="time-adjust-input"
-              placeholder={t('Offset placeholder')}
-              value={timeAdjustInput}
-              onChange={(e) => setTimeAdjustInput(e.target.value)}
-              onKeyDown={handleTimeAdjustKeyDown}
-            />
-            <button className="time-apply-button" onClick={handleApplyTime}>
-                {t('Apply')}
+          <div className="time-stepper-row">
+            <button className="time-step-button" onClick={() => handleStepTime(-0.1)}>
+              −0.1
+            </button>
+            <span className="time-stepper-value">
+              {currentOffset >= 0 ? '+' : ''}{currentOffset.toFixed(1)}s
+            </span>
+            <button className="time-step-button" onClick={() => handleStepTime(0.1)}>
+              +0.1
             </button>
             <button className="time-clear-button" onClick={handleClearTime}>
-                {t('Clear')}
+              {t('Clear')}
             </button>
-          </div>
-          <div
-            className="time-adjust-warning"
-            style={{ display: warningVisible ? 'block' : 'none' }}
-          >
-            {t('Invalid Input')}
           </div>
         </div>
       </div>
