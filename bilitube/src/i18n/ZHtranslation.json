@@ -31,7 +31,29 @@
     "Apply": "应用",
     "Clear": "清除",
     "Invalid Input": "**无效输入**",
-    "Refresh": "刷新"
-
-
+    "Refresh": "刷新",
+    "Dictionary Mapping": "词典映射管理",
+    "Original Word": "标题中的词",
+    "Chinese Replacement": "替换为",
+    "Add New Entry": "添加新条目",
+    "Clear All": "清空全部",
+    "Save And Apply": "保存并应用",
+    "Export Code": "导出词典码",
+    "Import Code": "导入词典码",
+    "Code Copied": "词典码已复制到剪贴板",
+    "No Entry To Export": "暂无可导出的映射条目",
+    "Import Prompt": "请粘贴词典码：",
+    "Import Success": "成功导入 {{count}} 条映射",
+    "Import Failed": "导入失败：词典码无效或已损坏",
+    "Copy Failed": "复制失败，请手动复制",
+    "Confirm Clear Dict": "确定要清空所有自定义替换词吗？",
+    "Import Mode Prompt": "检测到已有映射，请选择导入方式",
+    "Merge": "合并",
+    "Overwrite": "覆盖",
+    "Dictionary Subtitle": "把视频标题里的词替换成更易匹配的词",
+    "Mapping Count": "条映射",
+    "Dictionary Empty": "暂无映射，点击下方按钮添加",
+    "Help Title": "匹配逻辑说明",
+    "Help Content": "插件会读取当前 YouTube 视频的标题，去掉括号、特殊符号以及日文、韩文等字符后，提取出关键词，再用这些关键词去 B 站搜索弹幕。\n\n词典映射的作用：在提取关键词之前，先把标题里「标题中的词」整段替换成你指定的「替换为」内容。替换词不限定语言，可以是中文、英文、数字或任意文字。\n\n例如标题里有歌手的韩文名或缩写，匹配效果不好时，你可以把它替换成 B 站上更常用的中文名或全称，从而搜到更准确的弹幕。\n\n左边填标题中出现的词，右边填想替换成的词，保存后即可生效。",
+    "Got It": "知道了"
 }
