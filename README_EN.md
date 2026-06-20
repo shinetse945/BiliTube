@@ -5,7 +5,7 @@
 
 <h1 align="center">BiliTube</h1>
 
-<p align="center">English | <a href="./README.md">中文</a></p>
+<p align="center"><a href="./README.md">中文</a> | English</p>
 
 ### This project is a fork built on top of [Danmaku-Kakashi-Ext](https://github.com/Danmaku-Kakashi/Danmaku-Kakashi-Ext)
 
