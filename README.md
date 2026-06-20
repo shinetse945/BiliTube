@@ -5,6 +5,8 @@
 
 <h1 align="center">BiliTube</h1>
 
+<p align="center"><a href="./README_EN.md">English</a> | 中文</p>
+
 ### 本项目为在[Danmaku-Kakashi-Ext](https://github.com/Danmaku-Kakashi/Danmaku-Kakashi-Ext)基础上二次开发的项目
 
 ### 在 YouTube™上享受弹幕
