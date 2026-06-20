@@ -8,7 +8,7 @@
 
 BiliTube 是一个 **Chrome 浏览器扩展（Manifest V3）**，核心功能是在 YouTube 视频上叠加来自 Bilibili 的弹幕。
 
-技术栈：React 18 + Webpack 5 + Babel + Material UI 5 + i18next + CommentCoreLibrary。
+技术栈：React 18 + Webpack 5 + Babel + Material UI 5 + react-draggable + i18next + CommentCoreLibrary。
 
 ---
 
@@ -67,20 +67,30 @@ npm install
 
 ```bash
 cd bilitube
-npm.cmd run prod
+npm run prod      # Windows 下也可用 npm.cmd run prod
 ```
 
 执行后会依次完成 webpack 生产模式打包和 build.js 静态资源复制，最终在仓库根目录生成可用的 `extension/` 文件夹。
 
 将 `extension/` 文件夹通过 Chrome 的"加载已解压的扩展程序"导入即可使用。
 
+可用的 npm 脚本（见 `package.json`）：
+
+| 脚本 | 说明 |
+|---|---|
+| `npm run prod` | webpack 生产模式打包 + build.js 复制（发布用） |
+| `npm run dev` | webpack 开发模式打包 + build.js 复制 |
+| `npm run watch` | webpack 开发模式 watch，源码改动自动重新打包（不执行 build.js） |
+
 ### 3.3 构建流程
 
 1. **Webpack**（`webpack.config.js`）：
    - 入口：`src/index.js`
    - 输出：`../extension/content.js`（即仓库根目录的 `extension/content.js`）
-   - 处理 JS/JSX（babel-loader）、CSS（style-loader + css-loader）、图片资源（asset/resource）
+   - 处理 JS/JSX（babel-loader）、CSS（style-loader + css-loader）、图片资源（png/jpg/jpeg/gif/webp/svg，`asset/resource`）
    - 使用 `dotenv-webpack` 注入 `.env` 中的环境变量
+   - 启用 filesystem 缓存（`cache.type: 'filesystem'`）加速二次构建
+   - 注意：`webpack.config.js` 内默认 `mode: 'production'`，命令行 `--mode` 参数会覆盖它
 
 2. **build.js**（静态资源复制脚本）：
    - 从 `public/` 复制 `manifest.json`、`background.js` 到 `../extension/`
@@ -103,10 +113,12 @@ npm.cmd run prod
 
 ### 4.1 Manifest V3 配置（`public/manifest.json`）
 
-- **content_scripts**：在 `youtube.com/*` 页面注入 `content.js`
+- **content_scripts**：在 `https://*.youtube.com/*` 页面注入 `content.js`
 - **background.service_worker**：`background.js` 作为 Service Worker 运行
 - **permissions**：`tabs`, `storage`
-- **host_permissions**：`youtube.com`, `bilibili.com`, `dm-kks.com`
+- **host_permissions**：`https://*.youtube.com/*`, `https://*.bilibili.com/*`, `https://*.dm-kks.com/*`
+- **web_accessible_resources**：向 YouTube 页面暴露 `/icons/*` 资源
+- **content_security_policy**：扩展页面 CSP 允许 `connect-src https://*`（含 data/blob/filesystem），以支持跨域请求与 base64 数据
 
 ### 4.2 三层运行架构
 
@@ -277,7 +289,7 @@ npm.cmd run prod
 
 ## 11. 注意事项
 
-1. **编译必须在 `bilitube/` 目录下执行**（`cd bilitube` 然后 `npm.cmd run prod`）
+1. **编译必须在 `bilitube/` 目录下执行**（`cd bilitube` 然后 `npm run prod`，Windows 亦可用 `npm.cmd run prod`）
 2. **`extension/` 目录不要手动修改**，它的内容由编译流程自动生成
 3. `CommentCoreLibrary.js` 是第三方库的本地副本，约 2500 行，不建议修改
 4. 图片资源通过 webpack 的 `asset/resource` 处理，输出文件名格式为 `[name][hash:8][ext]`
