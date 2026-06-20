@@ -20,6 +20,17 @@ jobs:
           cache: npm
           cache-dependency-path: bilitube/package-lock.json
 
+      # .env 未提交到仓库（被本地保留），CI checkout 拿不到它，
+      # 会导致 dotenv-webpack 把 API 地址注入为 undefined，扩展连不上服务器。
+      # 这里在构建前生成 .env，写入官方生产地址。
+      - name: Create .env for build
+        working-directory: bilitube
+        run: |
+          cat > .env <<'EOF'
+          REACT_APP_API_WEB_URL=https://dm-kks.com
+          REACT_APP_API_BASE_URL=https://api.dm-kks.com
+          EOF
+
       - name: Install dependencies
         working-directory: bilitube
         run: npm ci
