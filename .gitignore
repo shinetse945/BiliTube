@@ -132,5 +132,8 @@ dist
 # VSCode configs
 .vscode/*
 
+# JetBrains IDE configs (IntelliJ, WebStorm, etc.)
+.idea/
+
 # Built content
 extension/
