@@ -195,53 +195,76 @@
     font-size: 13px;
     font-weight: 500;
 }
-.time-current-offset {
-    font-size: 12px;
-    color: #ccc;
-}
-
-.time-adjust-row {
+/* time stepper row: −0.1 / 当前偏移 / +0.1 / 清除 */
+.time-stepper-row {
     display: flex;
     align-items: center;
-    margin-bottom: 4px;
+    gap: 6px;
     width: 100%;
 }
-.time-adjust-input {
-    flex: 1;
-    min-width: 0;
-    padding: 5px 8px;
-    margin-right: 6px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(0, 0, 0, 0.4);
-    color: #fff;
-    font-size: 12px;
-    box-sizing: border-box;
-}
-.time-apply-button,
-.time-clear-button {
+
+.time-step-button {
+    flex: 0 0 auto;
     padding: 5px 10px;
-    margin-right: 6px;
+    min-width: 48px;
     background: rgba(255, 255, 255, 0.12);
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
-    min-width: 48px;
-    transition: background-color 0.1s ease;
+    transition: background-color 0.12s ease, transform 0.12s ease;
 }
-.time-apply-button:hover,
+.time-step-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+.time-step-button:active {
+    transform: scale(0.94);
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.time-stepper-value {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.time-clear-button {
+    flex: 0 0 auto;
+    padding: 5px 10px;
+    min-width: 48px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.12s ease, transform 0.12s ease;
+}
 .time-clear-button:hover {
     background: rgba(255, 255, 255, 0.25);
 }
-.time-clear-button {
-    margin-right: 0;
+.time-clear-button:active {
+    transform: scale(0.94);
+    background: rgba(255, 255, 255, 0.18);
 }
 
-.time-adjust-warning {
-    font-size: 12px;
-    color: #ff4f4f;
-    display: none;
-    margin-top: 4px;
+/* 滑块滑钮：hover 放大 + 点击缩放反馈 */
+.danmu-slider[type=range]::-webkit-slider-thumb {
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.danmu-slider[type=range]:hover::-webkit-slider-thumb {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 4px rgba(255, 65, 49, 0.2);
+}
+.danmu-slider[type=range]:active::-webkit-slider-thumb {
+    transform: scale(1.35);
+    box-shadow: 0 0 0 6px rgba(255, 65, 49, 0.28);
+}
+
+/* 开关滑钮：hover 时圆点轻微放大高亮 */
+.danmu-switch:hover .danmu-switch-slider::before {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12), 0 1px 3px rgba(0, 0, 0, 0.5);
 }
