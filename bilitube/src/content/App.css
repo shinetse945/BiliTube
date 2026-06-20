@@ -79,3 +79,284 @@ a {
 /* 弹幕关闭时按钮变暗（适配 SVG 图标按钮，grayscale 对纯白图标无效） */
 .makeGray { opacity: 0.5; }
 /* 面板定位统一交由 DanmakuPanel.css 控制（右对齐、高出进度条），此处不再覆盖 */
+
+/* ============ 统一交互动画（hover / 点击）============ */
+
+/* 实心按钮：黑底主操作、灰底次操作等。hover 轻微上浮 + 阴影，点击下压 */
+.dm-btn {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease, opacity 0.12s ease;
+}
+.dm-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.dm-btn:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+}
+
+/* 灰底胶囊次按钮：hover 加深背景 */
+.dm-btn-soft:hover {
+  background-color: #e5e5e5 !important;
+}
+
+/* 黑底主按钮：hover 略微提亮 */
+.dm-btn-primary:hover {
+  background-color: #272727 !important;
+}
+
+/* 图标按钮（搜索栏旁的词典/刷新等）：hover 浅灰圆形底 + 旋转/放大反馈 */
+.dm-icon-btn {
+  border-radius: 50% !important;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+.dm-icon-btn:hover {
+  background-color: #f2f2f2 !important;
+  transform: scale(1.1);
+}
+.dm-icon-btn:active {
+  transform: scale(0.92);
+}
+
+/* 虚线"添加条目"按钮：hover 高亮边框与文字 */
+.dm-add-btn {
+  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+}
+.dm-add-btn:hover {
+  border-color: #0f0f0f !important;
+  color: #0f0f0f !important;
+  background-color: #fafafa !important;
+}
+.dm-add-btn:active {
+  transform: scale(0.99);
+}
+
+/* 词典条目里的删除"×"：hover 变红放大 */
+.dm-remove-btn {
+  transition: transform 0.12s ease, color 0.12s ease;
+}
+.dm-remove-btn:hover {
+  color: #f03131 !important;
+  transform: scale(1.2);
+}
+.dm-remove-btn:active {
+  transform: scale(0.9);
+}
+
+/* 文本输入框：hover/focus 高亮边框 */
+.dm-input {
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.dm-input:hover {
+  border-color: #b0b0b0 !important;
+}
+.dm-input:focus {
+  border-color: #0f0f0f !important;
+  box-shadow: 0 0 0 2px rgba(15, 15, 15, 0.08) !important;
+}
+
+/* 提示条淡入动画 */
+@keyframes dm-toast-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dm-toast {
+  animation: dm-toast-in 0.18s ease;
+}
+
+/* ===== 词典映射面板 - 重新设计 ===== */
+.dm-dict-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.dm-dict-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dm-dict-title-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #ff4e6a 0%, #ff7a3d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.dm-dict-title-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f0f0f;
+  line-height: 1.2;
+}
+.dm-dict-subtitle {
+  font-size: 11px;
+  color: #909090;
+  margin-top: 2px;
+}
+.dm-tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background-color: #f2f2f2;
+  border: none;
+  border-radius: 18px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0f0f0f;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.dm-tool-btn:hover { background-color: #e5e5e5; }
+.dm-tool-btn:active { transform: scale(0.96); }
+.dm-dict-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #606060;
+  margin-bottom: 12px;
+}
+.dm-dict-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 7px;
+  background-color: #0f0f0f;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.dm-dict-list {
+  overflow-y: auto;
+  max-height: 300px;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+.dm-dict-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background-color: #f9f9f9;
+  border: 1px solid #eeeeee;
+  border-radius: 10px;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.dm-dict-row:hover {
+  background-color: #fff;
+  border-color: #d9d9d9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.dm-dict-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 7px;
+  font-size: 13px;
+  color: #0f0f0f;
+  outline: none;
+  background-color: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.dm-dict-input:hover { border-color: #c9c9c9; }
+.dm-dict-input:focus {
+  border-color: #ff4e6a;
+  box-shadow: 0 0 0 3px rgba(255, 78, 106, 0.12);
+}
+.dm-dict-arrow { color: #b0b0b0; flex-shrink: 0; font-size: 14px; }
+.dm-dict-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: #b0b0b0;
+  cursor: pointer;
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.dm-dict-remove:hover { background-color: #ffe9ed; color: #f03131; transform: scale(1.1); }
+.dm-dict-remove:active { transform: scale(0.9); }
+.dm-dict-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  color: #909090;
+  text-align: center;
+}
+.dm-dict-empty-icon { margin-bottom: 10px; opacity: 0.5; }
+.dm-dict-empty-text { font-size: 13px; }
+.dm-dict-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px dashed #cccccc;
+  border-radius: 10px;
+  color: #606060;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 14px 0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+.dm-dict-add:hover { border-color: #ff4e6a; background-color: #fff5f6; color: #ff4e6a; }
+.dm-dict-footer { display: flex; gap: 12px; }
+.dm-dict-clear {
+  padding: 10px 18px;
+  background-color: #f2f2f2;
+  border: none;
+  border-radius: 18px;
+  font-size: 13px;
+  color: #0f0f0f;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.dm-dict-clear:hover { background-color: #e5e5e5; }
+.dm-dict-clear:active { transform: scale(0.96); }
+.dm-dict-save {
+  flex: 1;
+  padding: 10px;
+  background-color: #0f0f0f;
+  border: none;
+  border-radius: 18px;
+  font-size: 13px;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.dm-dict-save:hover { background-color: #272727; }
+.dm-dict-save:active { transform: scale(0.97); }
+.dm-dict-toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background-color: #eafaf0;
+  border: 1px solid #b7e4c7;
+  border-radius: 9px;
+  font-size: 12px;
+  color: #1b7a43;
+  animation: dm-toast-in 0.18s ease;
+}
