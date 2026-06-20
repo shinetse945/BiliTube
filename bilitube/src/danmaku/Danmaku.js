@@ -217,7 +217,7 @@ class Danmaku extends React.Component {
         const offsetElement = document.getElementById("danmaku-offset");
         if (offsetElement) {
             this.offsetObserver = new MutationObserver(() => {
-                this.offset = parseInt(offsetElement.textContent, 10);
+                this.offset = parseFloat(offsetElement.textContent) || 0;
             });
             this.offsetObserver.observe(offsetElement, {childList: true});
         }
